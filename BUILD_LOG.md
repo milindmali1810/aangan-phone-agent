@@ -68,3 +68,7 @@
 - Testing is by WebRTC (browser simulated calls); no phone numbers. Each account has Rs 100 credit, voice costs about Rs 5-5.5 per minute, so about 15-18 minutes of testing in total. Test only once the whole application is built.
 - Expected from a test call: Telegram message with lead details; qualified leads in HubSpot; every call (qualified or not) on the deployed dashboard with recording and transcript.
 - The Actions integration (cal.com) is only needed if the agent books during the call.
+
+## Phase 5 research (2026-10-09, while HubSpot token is pending)
+- Found the Vaani developer docs (docs.vaanivoice.ai). Notes and open questions are in `docs/vaani-notes.md`. Nothing built yet; waiting for Milind's go-ahead as the brief requires.
+- Learned: transcripts reach us by a `call_postprocessing` webhook; the docs do not describe webhook signing, retries, cost per minute, Indian numbers or inbound setup. Those need a real test or a question to Vaani.
