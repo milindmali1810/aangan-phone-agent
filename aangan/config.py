@@ -33,9 +33,9 @@ MAX_COMMERCIAL_SQFT = 3000
 # Whether the voice agent may speak price ranges (Milind's decision, needs Nikhil's approval).
 QUOTE_PRICE_RANGE = True
 
-# Voice cost. ASSUMPTIONS: the brief says Vaani costs about Rs 5-5.50 a minute; the exchange rate is a guess.
+# Voice cost. The rate comes from the Vaani agent page (an estimate); the exchange rate is a guess.
 # Check both before trusting the dashboard's voice cost.
-VOICE_RATE_INR_PER_MIN = 5.5
+VOICE_RATE_INR_PER_MIN = 5.6  # Vaani shows "Rs 5.60/min (est.)" on the agent page
 INR_PER_USD = 88.0
 
 # HubSpot. New deals start in this stage of the default "Sales Pipeline". The free plan allows one pipeline, and its
