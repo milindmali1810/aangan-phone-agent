@@ -104,3 +104,14 @@
 - Milind turned Vercel protection off for `aangan-webhook`. The bare site address `/` shows 404 NOT_FOUND by design (only `/api/vaani_webhook` exists); the webhook address returns 200.
 - Ran `tools/fake_calls.py` against https://aangan-webhook.vercel.app/api/vaani_webhook: same results as local (401 bad token; FORWARD; same row on re-delivery; DECLINE; NEEDS_HUMAN; NOT_CLASSIFIED). Call start was measured from call_started events across separate serverless runs. Test rows deleted; 40 sample rows remain.
 - Next: Milind registers the address in Vaani (Settings -> Webhooks); one real WebRTC test call comes at the very end.
+
+### Phase 5 step 3b: webhook registered in Vaani; real message shape learned (2026-10-09)
+- Milind registered the address in Vaani (Developers -> Webhooks -> New End Point): name "Aangan pipeline", agent aangan-enquiry-agent, 5 events (call started, user picked up, call ended, call failed, call post-processing). Signing secret left empty (Vaani's docs do not explain how to verify it); our URL token is the check.
+- Pressed Test Connectivity. It reached us and showed the REAL message shape, which differs from the docs:
+  1. Vaani can send a BUNDLE: `{"event":"webhook_test","events":[...],"timestamp":...}`. Each inner event is `{"event","data":{call_id,room_name,...},"timestamp"}`.
+  2. The sample shows `call_duration: 120` in both call_ended and call_postprocessing. The docs say seconds and milliseconds. Handled in code: call_ended is seconds; for post-processing, a value above 600 is milliseconds (our calls are capped at 300 seconds), otherwise seconds.
+  3. Every event has its own timestamp (used as the measured call start) and call_started carries `phone_number` (used when the caller does not say their number).
+  4. Transcript labels are "Agent:" / "User:".
+- Rewrote `aangan/pipeline.py` for all of this; `webhook_test` messages are logged but never processed (their sample events would create a junk call).
+- What broke: my "restarted" test server was an old copy still answering, because on Windows two programs can listen on one port. Fix: kill every listener and re-test on a fresh port, and check the response shape to know which code answered. Same lesson as before, now confirmed.
+- Tested with fake calls in Vaani's real shapes: bundle -> 1 call; re-delivery -> same row; single events -> 1 call; ms duration -> 24 s; empty -> not classified; test message -> logged only.

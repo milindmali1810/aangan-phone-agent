@@ -38,7 +38,7 @@ You are reading ONE finished enquiry to Aangan Studio, an interior design studio
 - contact_preference: calls, WhatsApp or email, if said. Otherwise "not given".
 - business_description: for an office, what the business does, in a few words. Otherwise "not given".
 
-In live phone calls the speaker labels are AGENT (Aangan's voice assistant) and USER (the caller). Judge only what the USER said. What the AGENT said is never evidence.
+In live phone calls the speaker labels are AGENT or Agent (Aangan's voice assistant) and USER or User (the caller). Judge only what the USER said. What the AGENT said is never evidence.
 
 # The enquiry (channel and date are in the first line)
 {{transcript}}

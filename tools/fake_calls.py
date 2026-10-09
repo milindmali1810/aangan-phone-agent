@@ -1,4 +1,4 @@
-"""Send FAKE Vaani events to a webhook address, to test the whole pipeline without spending Vaani credit.
+"""Send FAKE Vaani events (in the shape Vaani's own test message showed) to a webhook address, to test the whole pipeline without spending Vaani credit.
    python tools/fake_calls.py http://localhost:8765/api/vaani_webhook      (local)
    python tools/fake_calls.py https://<site>/api/vaani_webhook             (deployed)
 All fake calls use ids starting with TEST- so they can be found and deleted afterwards."""
@@ -49,19 +49,42 @@ def post(body, token=TOKEN):
         return e.code, e.read()[:200].decode()
 
 
-def post_call(n, transcript, secs):
+def iso(offset_seconds=0):
+    return time.strftime("%Y-%m-%dT%H:%M:%S+00:00", time.gmtime(time.time() + offset_seconds))
+
+
+def events_for(n, transcript, secs, duration_value):
     room, cid = f"TEST-room-{n}", f"TEST-call-{n}"
-    post({"event": "call_started", "room_name": room})
-    time.sleep(1)
-    return post({"event": "call_postprocessing", "call_id": cid, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S+00:00", time.gmtime()),
-                 "data": {"room_name": room, "call_id": cid, "call_duration": secs * 1000, "end_reason": "user_hangup",
-                          "summary": "fake call", "entities": {}, "dispositions": {},
-                          "recording_url": f"https://example.invalid/rec/{cid}.mp3", "transcript": transcript}})
+    started = {"event": "call_started", "timestamp": iso(-secs),
+               "data": {"call_id": cid, "room_name": room, "call_type": "Inbound",
+                        "agent_name": "aangan-enquiry-agent", "phone_number": f"+9198000000{n:02d}"}}
+    ended = {"event": "call_ended", "timestamp": iso(),
+             "data": {"call_id": cid, "room_name": room, "end_reason": "completed", "call_duration": secs,
+                      "technical_issue": False}}
+    post = {"event": "call_postprocessing", "call_id": cid, "timestamp": iso(),
+            "data": {"call_id": cid, "room_name": room, "call_duration": duration_value, "end_reason": "completed",
+                     "summary": "fake call", "entities": {}, "dispositions": {},
+                     "recording_url": f"https://example.invalid/rec/{cid}.mp3", "transcript": transcript}}
+    return started, ended, post
 
 
-print("wrong token  ->", post({"event": "x"}, token="wrong"))
-print("good lead    ->", post_call(1, GOOD, 78))
-print("same again   ->", post_call(1, GOOD, 78), "(re-delivery; must not duplicate)")
-print("not a fit    ->", post_call(2, NOT_FIT, 25))
-print("complaint    ->", post_call(3, COMPLAINT, 24))
-print("empty call   ->", post_call(4, EMPTY, 6))
+# call 1: one BUNDLE of three events (duration in seconds)
+s1, e1, p1 = events_for(1, GOOD, 78, 78)
+print("wrong token     ->", post({"event": "x"}, token="wrong"))
+print("vaani test msg  ->", post({"event": "webhook_test", "events": [s1, e1, p1], "timestamp": iso()}),
+      "(must be logged only, no call created)")
+print("1 good, bundle  ->", post({"events": [s1, e1, p1], "timestamp": iso()}))
+print("1 again         ->", post({"events": [s1, e1, p1], "timestamp": iso()}), "(re-delivery; same row)")
+# call 2: SEPARATE events, post-processing duration in seconds
+for ev in events_for(2, NOT_FIT, 25, 25):
+    r = post(ev)
+print("2 not fit, single ->", r)
+# call 3: post-processing duration in MILLISECONDS (24000 ms = 24 s); no call_ended duration known to it
+a, b, c = events_for(3, COMPLAINT, 24, 24000)
+for ev in (a, c):
+    r = post(ev)
+print("3 complaint, ms   ->", r)
+# call 4: empty
+for ev in events_for(4, EMPTY, 6, 6):
+    r = post(ev)
+print("4 empty           ->", r)
