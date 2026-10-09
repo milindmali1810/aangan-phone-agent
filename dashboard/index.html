@@ -103,7 +103,7 @@ function render(s) {
   const perQual = q ? s.total_cost_usd / q : null;
 
   document.getElementById("banner").innerHTML = s.live_rows === 0
-    ? `<div class="banner"><b>Sample data.</b> These ${s.sample_rows} rows are the September enquiries run through the classifier. No live calls yet, so speed and handoff numbers are from the studio's current front desk, not the new agent.</div>` : "";
+    ? `<div class="banner"><b>Sample data.</b> These ${s.sample_rows} rows are the September enquiries run through the classifier. No live calls yet, so speed numbers describe the studio's current front desk, not the new agent. They also flatter it: calls that rang out with no record at all are missing, which is why Nikhil's own count (about 48% unanswered in 48 hours) is much worse.</div>` : "";
 
   document.getElementById("content").innerHTML = `
     <h2>Speed</h2>

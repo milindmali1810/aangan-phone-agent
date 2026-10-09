@@ -56,3 +56,15 @@
 - Vercel protects new sites with a login by default.
 
 **Next:** Milind adds the Supabase secret key, seed runs, dashboard is checked against the classifier output.
+
+### Phase 2 result (2026-10-09)
+- Seeded 40 sample rows + 40 cost rows. Database counts match the classifier exactly (15 / 14 / 7 / 3 / 1). Total cost $0.0716 matches.
+- Security check: with the public key, reading `calls` and `cost_log` returns nothing and inserting is refused. Only `dashboard_stats()` is open.
+- Dashboard numbers on sample data: 40 enquiries; 17 of 27 tracked answered in 5 min (63%), 20 of 27 in 1 hour (74%), average 5.9 hours; cost $0.0018 per enquiry, $0.0025 per qualified lead.
+- Caveat written into the banner: the sample only contains logged enquiries, so it flatters the front desk against Nikhil's 48% unanswered baseline.
+- Still to do: the per-call view with recording + transcript (needs a login; the VaniBot brief says the dashboard must show them); redeploy with the new banner text.
+
+### Notes from the VaniBot brief Milind pasted (for Phase 5)
+- Testing is by WebRTC (browser simulated calls); no phone numbers. Each account has Rs 100 credit, voice costs about Rs 5-5.5 per minute, so about 15-18 minutes of testing in total. Test only once the whole application is built.
+- Expected from a test call: Telegram message with lead details; qualified leads in HubSpot; every call (qualified or not) on the deployed dashboard with recording and transcript.
+- The Actions integration (cal.com) is only needed if the agent books during the call.
