@@ -41,8 +41,8 @@ def call(method, path, body=None):
 booking = "booking_on.md" if "--booking" in sys.argv else "booking_off.md"
 prompt = (ROOT / "prompts" / "voice_agent.md").read_text(encoding="utf-8").replace(
     "{{BOOKING}}", (ROOT / "prompts" / booking).read_text(encoding="utf-8").strip())
-# The names of the two custom tools exactly as they appear in Vaani (the cURL helper auto-named them).
-SLOTS_TOOL, BOOK_TOOL = "create_slot", "create_booking"
+# The two Cal.com tools built into Vaani (Persona -> Actions -> Integration Tools), written the way Vaani wants them in a prompt.
+SLOTS_TOOL, BOOK_TOOL = "@Check_availability_booking", "@book_appointment"  # Vaani calls a tool from the prompt with an @ in front of its name
 prompt = prompt.replace("{{SLOTS_TOOL}}", SLOTS_TOOL).replace("{{BOOK_TOOL}}", BOOK_TOOL)
 agent_id = env("VAANI_AGENT_ID")
 
