@@ -72,3 +72,11 @@
 ## Phase 5 research (2026-10-09, while HubSpot token is pending)
 - Found the Vaani developer docs (docs.vaanivoice.ai). Notes and open questions are in `docs/vaani-notes.md`. Nothing built yet; waiting for Milind's go-ahead as the brief requires.
 - Learned: transcripts reach us by a `call_postprocessing` webhook; the docs do not describe webhook signing, retries, cost per minute, Indian numbers or inbound setup. Those need a real test or a question to Vaani.
+
+### Phase 5 step 1: the Vaani agent (2026-10-09)
+- Wrote `prompts/voice_agent.md` (the agent's instructions, from the rubric) and `tools/vaani_agent.py` (creates/updates the agent through Vaani's API). Created agent `aangan-enquiry-agent`; its id is saved as VAANI_AGENT_ID in `.env`.
+- Settings applied and read back: prompt (5,740 chars), greeting, language auto-detect, default voice "devansh" (cartesia), max call length 5 minutes (protects the Rs 100 test credit), idle hang-up 20 s.
+- Agent rules: collects name, number, locality, home/office, scope+size, timeline, decision-maker; one direct question if criterion 1-3 unclear; never probes budget; speaks only the three indicative ranges with the disclaimer (Milind's decision; Nikhil must approve because pricing.md says never quote); never multiplies a range into a total; cannot book yet, says a designer will confirm a time; graceful-close line verbatim; complaints go to a human.
+- No call placed, no credit spent.
+- Found: Vaani's OpenAPI file gives call details at `/api/call_details/{client}/{call_id}`, the docs page shows `/api/call_details/{call_id}`. Test which works before relying on either.
+- Next: webhook receiver (needs a public URL on Vercel), register it in Vaani Settings -> Webhooks, then wire classifier -> database. HubSpot and Telegram plug in after.
