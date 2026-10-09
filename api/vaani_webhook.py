@@ -24,7 +24,14 @@ class handler(BaseHTTPRequestHandler):
         pass
 
     def do_GET(self):  # lets you open the address in a browser to see that it is alive
-        self._reply(200, {"ok": True, "service": "aangan vaani webhook"})
+        body = {"ok": True, "service": "aangan vaani webhook"}
+        token = parse_qs(urlparse(self.path).query).get("token", [""])[0]
+        if pipeline.token_ok(token):  # with the secret: which settings does this server see? (yes/no only, never values)
+            from aangan import env
+            names = ["GEMINI_API_KEY", "SUPABASE_URL", "SUPABASE_SECRET_KEY", "WEBHOOK_SECRET", "TELEGRAM_BOT_TOKEN",
+                     "TELEGRAM_CHAT_ID", "TELEGRAM_WEBHOOK_SECRET", "CRON_SECRET", "HUBSPOT_TOKEN"]
+            body["settings_seen"] = {n: bool(env.get(n)) for n in names}
+        self._reply(200, body)
 
     def do_POST(self):
         token = parse_qs(urlparse(self.path).query).get("token", [""])[0]
