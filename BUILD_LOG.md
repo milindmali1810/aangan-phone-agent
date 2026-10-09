@@ -99,3 +99,8 @@
 - Created Vercel project `aangan-webhook`, connected to the GitHub repo (pushes to main redeploy it). Stored GEMINI_API_KEY, SUPABASE_SECRET_KEY, WEBHOOK_SECRET as sensitive settings and SUPABASE_URL as plain. Deployment READY at https://aangan-webhook.vercel.app/api/vaani_webhook
 - Blocked: Vercel Authentication (default protection) redirects every request to a Vercel login (HTTP 302), so Vaani's webhook would never reach it. Needs Milind to switch protection off for this project; the endpoint is guarded by the secret token in the URL instead.
 - Next: after that toggle, run `tools/fake_calls.py` against the deployed address, then register the address in Vaani (Settings -> Webhooks).
+
+### Phase 5 step 3 result (2026-10-09)
+- Milind turned Vercel protection off for `aangan-webhook`. The bare site address `/` shows 404 NOT_FOUND by design (only `/api/vaani_webhook` exists); the webhook address returns 200.
+- Ran `tools/fake_calls.py` against https://aangan-webhook.vercel.app/api/vaani_webhook: same results as local (401 bad token; FORWARD; same row on re-delivery; DECLINE; NEEDS_HUMAN; NOT_CLASSIFIED). Call start was measured from call_started events across separate serverless runs. Test rows deleted; 40 sample rows remain.
+- Next: Milind registers the address in Vaani (Settings -> Webhooks); one real WebRTC test call comes at the very end.
