@@ -216,3 +216,8 @@
 - Stored DASHBOARD_PASSWORD on Vercel (sensitive) and redeployed. Health check shows the live server sees all 12 settings. Live checks: https://aangan-webhook.vercel.app/ -> 200 (the dashboard); /api/calls with no or wrong password -> 401; right password -> 200 with 40 calls and no transcripts in the list. Public totals still work with no password and contain no personal data.
 - Nikhil's access: open the site, type the dashboard password under Calls. No Vercel account needed. The older dashboard at aangan-dashboard (behind Vercel login) is now redundant.
 - Remaining: chat test to booking, one real voice call, fixes, handover sheet, rotate keys.
+
+### First chat test error (2026-10-10)
+- Milind's chat test answered "I am sorry, I encountered an error. Please try again." Vercel's runtime logs are blocked on this plan (HTTP 403), so I diagnosed from the tool settings instead: Vaani's cURL helper had told both tools to STORE fields from our answer that our server never sends (create_slot: id; create_booking: bookingId and status). A missing field may make Vaani treat the call as failed. Removed those (store_variables = {}) through the API; tools/vaani_fix_tools.py now does it every time.
+- Checked our side with the inputs Vaani may send (empty body, empty preferred_date, a real date, the word "tomorrow", no body to book): always HTTP 200 with usable answers, never a crash.
+- If the error returns, the next suspects are: the chat test panel not supporting tool calls with custom headers; the agent page holding stale settings (refresh before testing); the booking tool being called with a missing field. The real VOICE call will show which.

@@ -1,6 +1,6 @@
 """Re-applies the correct descriptions and required fields to the two booking tools on the Vaani agent.
 Vaani's "Paste cURL" helper auto-named the tools create_slot / create_booking, made every parameter required (email
-included) and left the parameter descriptions empty. This puts that right. Safe to re-run. It keeps each tool's address
+included) and left the parameter descriptions empty, and told Vaani to store response fields that do not exist. This puts that right. Safe to re-run. It keeps each tool's address
 and header exactly as they are.   python tools/vaani_fix_tools.py"""
 import copy
 import json
@@ -21,6 +21,7 @@ def patch(body):
 
 fs = copy.deepcopy(patch({})["persona"]["actions"]["functions"])
 for f in fs:
+    f["agent_config"]["params"]["store_variables"] = {}  # the cURL helper asked Vaani to save fields (id, bookingId, status) our server never sends; a missing field can fail the tool call
     p = f["function_params"]["properties"]
     if f["function_name"] == "create_slot":
         f["description"] = ("Look up the free consultation times. This only checks the calendar and books nothing. Call it ONLY after the caller says yes to booking "
