@@ -13,6 +13,7 @@ from urllib.parse import quote
 
 from . import config as C
 from . import db, env
+from .classifier import is_big_project
 
 IST = timezone(timedelta(hours=5, minutes=30))
 CLAIMABLE = ("FORWARD", "FORWARD_WITH_FLAG", "NEEDS_HUMAN")
@@ -51,8 +52,8 @@ def _claim_button(call_id):
     return {"inline_keyboard": [[{"text": "Claim this lead", "callback_data": f"claim:{call_id}"}]]}
 
 
-def lead_text(outcome, note, reason=None):
-    text = HEADER[outcome] + "\n\n" + (note or "(no details)")
+def lead_text(outcome, note, reason=None, big=False):
+    text = ("BIG PROJECT - tell Nikhil. " if big and outcome in CLAIMABLE else "") + HEADER[outcome] + "\n\n" + (note or "(no details)")
     if outcome in ("DECLINE", "NEEDS_HUMAN", "NOT_CLASSIFIED") and reason:
         text += "\n\nWhy: " + reason
     return text
@@ -63,7 +64,8 @@ def send_lead(saved, row, result):
     outcome = row["outcome"]
     claimable = outcome in CLAIMABLE
     chat = env.get("TELEGRAM_CHAT_ID") if claimable else (env.get("TELEGRAM_FYI_CHAT_ID") or env.get("TELEGRAM_CHAT_ID"))
-    body = {"chat_id": chat, "text": lead_text(outcome, row["handoff_note"], row["reason"])}
+    big = is_big_project(row.get("property_type"), row.get("size_sqft"))
+    body = {"chat_id": chat, "text": lead_text(outcome, row["handoff_note"], row["reason"], big)}
     if claimable:
         body["reply_markup"] = _claim_button(saved["id"])
     msg = api("sendMessage", body)

@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 
 from . import config as C
 from . import db, env
+from .classifier import is_big_project
 
 BASE = "https://api.hubapi.com"
 # HubSpot's standard association type ids
@@ -131,7 +132,7 @@ def sync_call(saved, row):
                             f" - {row['locality']} - {kind}",
                 "pipeline": "default", "dealstage": C.HUBSPOT_DEAL_STAGE,
                 "description": row["handoff_note"] or "",
-                "hs_priority": "high" if row["referral"] != "not given" else "medium"},
+                "hs_priority": "high" if (row["referral"] != "not given" or is_big_project(row.get("property_type"), row.get("size_sqft"))) else "medium"},
             "associations": [{"to": {"id": contact_id}, "types": [{"associationCategory": "HUBSPOT_DEFINED", "associationTypeId": DEAL_TO_CONTACT}]}]})
         deal_id = deal["id"]
         _note(body, deal_id, NOTE_TO_DEAL)

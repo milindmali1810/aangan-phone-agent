@@ -159,6 +159,8 @@ def decide(x):
     b_result, b_note = budget_check(x)
     if b_result == "fail":
         fails.append(f"Budget: {b_note}")
+    if x["scope_kind"] == "office" and (x.get("size_sqft") or 0) > C.MAX_COMMERCIAL_SQFT:  # services.md: commercial only up to about 3,000 sq ft
+        fails.append(f"Scope: office of {x['size_sqft']:g} sq ft is above the {C.MAX_COMMERCIAL_SQFT:,} sq ft limit")
     if fails:
         return "DECLINE", "; ".join(fails), []
 
@@ -220,3 +222,13 @@ def classify_text(transcript, eid="live"):
 def classify(eid):
     transcript = (ROOT / "enquiries" / f"{eid}.txt").read_text(encoding="utf-8")
     return classify_text(transcript, eid)
+
+
+def is_big_project(scope_kind, size_sqft):
+    """Big-deal alert (ASSUMPTION thresholds in config): residential over BIG_HOME_SQFT or office over BIG_OFFICE_SQFT."""
+    size = size_sqft or 0
+    if scope_kind in ("full_home", "partial_home"):
+        return size > C.BIG_HOME_SQFT
+    if scope_kind == "office":
+        return size > C.BIG_OFFICE_SQFT
+    return False

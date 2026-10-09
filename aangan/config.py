@@ -19,18 +19,19 @@ BUDGET_DECLINE_BELOW = 0.75   # ASSUMPTION: below 75% of the lowest tier floor =
 HOME_FLOOR_PER_SQFT = 1800        # Standard residential tier, lowest
 OFFICE_FLOOR_PER_SQFT = 1200      # Basic commercial tier, lowest
 ROOM_FLOOR_LAKH = 3.5             # Single-room redesign, lowest
-# Use the top of a volunteered range ("18-22 lakh" -> 22). This protects good leads from being
+# (Documentation only: the code always works this way.) Use the top of a volunteered range ("18-22 lakh" -> 22). This protects good leads from being
 # wrongly declined, which is the costliest mistake.
 BUDGET_USE = "upper"
 
-# Big-deal alert to Nikhil. ASSUMPTION.
+# Big-project marker (ASSUMPTION): the Telegram message starts "BIG PROJECT - tell Nikhil" and the HubSpot deal is High priority.
 BIG_HOME_SQFT = 3000
 BIG_OFFICE_SQFT = 2000
 
-# Commercial size limit from services.md.
+# Commercial size limit from services.md: an office above this is declined (enforced in classifier.decide).
 MAX_COMMERCIAL_SQFT = 3000
 
-# Whether the voice agent may speak price ranges (Milind's decision, needs Nikhil's approval).
+# NOT a switch: it only records Milind's decision that the agent may speak price ranges (needs Nikhil's approval).
+# The ranges themselves are written in the "Money" section of prompts/voice_agent.md; edit that section to change or remove them.
 QUOTE_PRICE_RANGE = True
 
 # Voice cost. The rate comes from the Vaani agent page (an estimate); the exchange rate is a guess.

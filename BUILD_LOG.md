@@ -199,3 +199,8 @@
 - Changed: prompts/voice_agent.md (new "Timelines" section), prompts/classify.md, classifier.py (new field deadline_firm; apply_timeline_rule).
 - Testing: first attempt made 4 good leads (F06, T15, W01, W06) drop from Forward to Flag because "no finish date" was treated as unclear. Fixed: a start/possession date or flexibility with no finish date = pass; only NO timing at all = unclear. Regression: 0 of 40 outcomes changed. New `tools/test_timeline_cases.py`: 8 synthetic cases, all pass (firm finish in a month = decline; flexible = flag; firmness unsaid = flag; start tomorrow / possession next month with no finish date = forward; 3 months = forward; firm 8 weeks = flag; no timing = flag).
 - Lesson: when a rule is tightened, re-run the whole set; it caught a side effect the new tests would not have.
+
+### Settings that were defined but not wired in, now fixed (2026-10-10)
+- Found while preparing the parameters PDF: MAX_COMMERCIAL_SQFT, BIG_HOME_SQFT and BIG_OFFICE_SQFT were in config.py but nothing used them. Now: an office above 3,000 sq ft is declined with the reason (classifier.decide); a "big project" (home over 3,000 sq ft, office over 2,000) gets "BIG PROJECT - tell Nikhil." at the top of its Telegram message and a High-priority HubSpot deal. QUOTE_PRICE_RANGE and BUDGET_USE were only notes, and now say so in config.py (the spoken ranges are in the Money section of prompts/voice_agent.md).
+- New `tools/test_small_rules.py` (10 checks, pass). Regression: 0 of 40 outcomes changed; timeline, Telegram, HubSpot and booking suites all pass.
+- Lesson: a setting that nothing reads is a lie in the documentation. Grep for each setting's use before documenting it.
