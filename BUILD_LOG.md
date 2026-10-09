@@ -186,3 +186,9 @@
 - Booking wording is ON in the agent prompt and uses the real tool names (SLOTS_TOOL / BOOK_TOOL constants in tools/vaani_agent.py). Saving from the Vaani page did NOT overwrite the prompt. Rule: after anything is changed in the Vaani page, refresh it before saving again, and re-run `python tools/vaani_agent.py --booking` to be safe.
 - Vaani shows the agent estimate as Rs 5.60/min; config updated.
 - NOT yet tested: an actual booking (chat test in Vaani's Chat tab, then cancel the booking in Cal.com). Needs Milind's "ok to book".
+
+### Found in the first chat test (2026-10-09)
+- Milind's first chat test showed the agent saying "P1 question:" out loud: it had read my internal tier labels (P1/P2/P3) as words to speak. Fixed: renamed them in prompts/voice_agent.md to plain words (must-ask / if-time / never-ask) and added an explicit rule never to read out headings, labels, tool names or section names, or start a sentence with a label or colon. Applied with `python tools/vaani_agent.py --booking`; tools re-checked with tools/vaani_fix_tools.py.
+- Lesson: anything written in an agent prompt can be spoken. Keep internal labels out of it, and test in the real chat before trusting wording.
+- Also in that screenshot the sentence was cut off ("...or when are"); to watch in the next test (may only have been the screenshot).
+- No booking has been made in Cal.com yet (checked: 0 on the Design consultation event).
