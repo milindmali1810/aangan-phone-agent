@@ -229,3 +229,8 @@
 
 ### Vaani has built-in Cal.com tools (2026-10-10)
 - Chat test with our custom tools: our server recorded ZERO calls (tool_log empty), so Vaani failed before calling us. Found that the connected Cal.com integration offers 4 built-in tools: Check_availability_booking, book_appointment, reschedule_appointment, cancel_appointment (agent page -> Persona -> Actions -> Integration Tools; all off by default). Custom tools switched off while we examine them. If they fit (event type = Design consultation; no email demanded; real slots), use them and drop create_slot / create_booking; otherwise return to ours. The prompt tool names (SLOTS_TOOL / BOOK_TOOL in tools/vaani_agent.py) must then be updated.
+
+### Tool calls fail in chat whatever the tool (2026-10-10)
+- Tried: our custom tools on (zero calls reached our server), custom tools off, Vaani's built-in Cal.com tools with the @ syntax: always "I am sorry, I encountered an error" right after the caller says yes to the consultation, i.e. the moment the model decides to call a tool. Normal conversation works.
+- The agent's brain was Gemini 3.5 Flash (primary) with Azure GPT-4o as fallback. Hypothesis: the very new Gemini model mishandles function calls in Vaani's pipeline. Swapped: GPT-4o primary, Gemini fallback (reversible: persona.senses_capabilities.brain.llm).
+- Learned: Vaani's built-in Cal.com tools are configured in the page (Event Type Id, Timezone, Duration, Prompt) and are NOT visible in the agent record read via the API, so they cannot be verified from outside. The page's Save Agent overwrote my API fixes to the custom tools (stale copy) but not the system prompt. Always refresh the page before Save Agent.
