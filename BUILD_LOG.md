@@ -137,3 +137,7 @@
 - Live test: sent a test lead, moved its notified time back 40 minutes; the timer found it within a minute and posted "Still unclaimed after 40 minutes"; Milind pressed Claim in Telegram and the claim (who + time) was recorded in the database through the live connection. Telegram webhook shows no errors. Test row deleted.
 - Note: the pg_cron job text holds CRON_SECRET inside the database (visible only to database admins). Rotate it with the other secrets before go-live.
 - Phase 4 left to consider: email fallback if Telegram fails (optional, last), and a separate quiet group for declines (set TELEGRAM_FYI_CHAT_ID).
+
+## TO REVISIT LATER (Milind's request, 2026-10-09)
+- **Phase 4 (Telegram): Milind wants to come back and optimise it.** Working today: lead post with Claim button, first-claim-wins, 30-minute reminders (max 6), declines as quiet FYI. Ideas on the table: separate quiet group for declines (TELEGRAM_FYI_CHAT_ID), reminder timing, message wording/length, email fallback if Telegram fails, privacy of customer numbers in the chat. REMIND MILIND at the end of each phase and before wrapping up.
+- Rotate before go-live: Gemini key, Supabase secret key, Vaani key, webhook secret, Telegram bot token (BotFather /revoke), CRON_SECRET (also stored in the pg_cron job).
