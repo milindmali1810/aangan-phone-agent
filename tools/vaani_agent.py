@@ -1,6 +1,7 @@
 """Create or update the Aangan agent in Vaani from prompts/voice_agent.md.
 
   python tools/vaani_agent.py            create the agent (first time) or update it (if VAANI_AGENT_ID is in .env)
+  python tools/vaani_agent.py --booking  same, with the in-call booking wording switched ON (only after linking Cal.com)
   python tools/vaani_agent.py --show     print the agent's current settings (nothing changed)
 
 Needs VAANI_API_KEY in .env. Writes VAANI_AGENT_ID back to .env after creating.
@@ -35,7 +36,11 @@ def call(method, path, body=None):
         sys.exit(f"{method} {path} -> HTTP {e.code}: {e.read()[:600].decode()}")
 
 
-prompt = (ROOT / "prompts" / "voice_agent.md").read_text(encoding="utf-8")
+# Booking wording: OFF until Cal.com is linked in Vaani (otherwise the agent would claim bookings that never happen).
+# Run with --booking once Cal.com is connected in Vaani's Settings -> Integrations.
+booking = "booking_on.md" if "--booking" in sys.argv else "booking_off.md"
+prompt = (ROOT / "prompts" / "voice_agent.md").read_text(encoding="utf-8").replace(
+    "{{BOOKING}}", (ROOT / "prompts" / booking).read_text(encoding="utf-8").strip())
 agent_id = env("VAANI_AGENT_ID")
 
 if "--show" in sys.argv:

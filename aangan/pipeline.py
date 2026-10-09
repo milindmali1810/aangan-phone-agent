@@ -10,7 +10,7 @@ import hmac
 from datetime import datetime, timedelta, timezone
 
 from . import config as C
-from . import db, env, hubspot, telegram
+from . import calcom, db, env, hubspot, telegram
 from .classifier import classify_text
 
 IST = timezone(timedelta(hours=5, minutes=30))
@@ -106,6 +106,16 @@ def _process_call(e):
     else:
         r = classify_text(f"{call_id} · Phone · {stamp} (live call with the voice agent)\n" + transcript, call_id or "live")
 
+    # Did the agent book a consultation during the call? Only ever for callers who fit; a failure here never loses the call
+    booking = None
+    if calcom.enabled() and r["outcome"] in ("FORWARD", "FORWARD_WITH_FLAG"):
+        try:
+            booking = calcom.find_consultation(started, dur)
+        except Exception as ex:
+            print("calcom error:", repr(ex)[:300])
+    if booking and r["handoff_note"]:
+        r["handoff_note"] = r["handoff_note"].replace(
+            "Consultation slot: not booked", f"Consultation slot: {calcom.pretty(booking)} (booked in the call, ref {str(booking.get('uid', ''))[:8]})")
     if r["handoff_note"]:  # live calls have no transcript file; point at the call itself
         r["handoff_note"] = "\n".join(
             f"Call: {call_id} | Recording: {data.get('recording_url') or 'not available'}" if l.startswith("Transcript:") else l
@@ -135,6 +145,7 @@ def _process_call(e):
         "call_started_at": started.isoformat(), "started_at_source": source,
         # the voice agent greets the moment the call connects (let_user_speak_first is off)
         "first_response_at": started.isoformat(), "response_tracked": True,
+        "consultation_booked": bool(booking), "consultation_slot": booking["start"] if booking else None,
         "call_seconds": round(dur) if dur else None,
         "voice_cost_usd": round(voice_usd, 6), "classification_cost_usd": r["cost_usd_estimate"],
     }

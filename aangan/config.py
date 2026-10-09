@@ -46,3 +46,6 @@ HUBSPOT_DEAL_STAGE = "4417021666"  # "New enquiry" (renamed from Appointment Sch
 # Telegram handoff. REPING_MINUTES is Milind's proposal to Nikhil, not Nikhil's rule.
 REPING_MINUTES = 30   # re-ping the group if a lead is still unclaimed after this long
 REPING_MAX = 6        # stop after this many reminders so a forgotten lead cannot spam the group all night
+
+# Cal.com consultation event type (created by tools/cal_setup.py). Mon-Sat 10:00-19:00 India time, 30 minutes, 24 hours' notice (proposal).
+CAL_EVENT_TYPE_ID = 7412359
