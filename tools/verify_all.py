@@ -53,9 +53,18 @@ try:
     rec("Vaani agent", "idle warn/hang-up 15/45 s", "PASS" if (e["idle_conversation_settings"]["idle_call_warning_timeout"], e["idle_conversation_settings"]["idle_call_hangup_timeout"]) == (15, 45) else "WARN")
     kw = p["senses_capabilities"]["ears"]["stt"]["primary"]["keywords"]
     rec("Vaani agent", "speech keywords for Pune places", "PASS" if "Baner" in kw else "FAIL", f"{len(kw)} words")
-    custom = [(f["function_name"], f["agent_config"]["is_enabled"]) for f in p["actions"]["functions"]]
-    rec("Vaani agent", "old custom tools are OFF (avoid two ways to book)", "PASS" if all(not on for _, on in custom) else "WARN", str(custom))
-    rec("Vaani agent", "built-in Cal.com tools ON", "WARN", "cannot be read through the API; proven working by the call log (see below)")
+    fns = p["actions"]["functions"]
+    old = [(f["function_name"], f["agent_config"]["is_enabled"]) for f in fns if f.get("is_custom")]
+    rec("Vaani agent", "old custom booking tools are OFF (only one way to book)", "PASS" if all(not on for _, on in old) else "FAIL", str(old))
+    for f in fns:
+        if f.get("is_custom"):
+            continue
+        pr = f["agent_config"]["params"]
+        ok_cfg = f["agent_config"]["is_enabled"] and pr.get("event_type_id") == 7412359 and pr.get("timezone") == "Asia/Kolkata" and pr.get("duration_minutes") == 30
+        rec("Vaani agent", f"built-in tool {f['function_name']}: ON, event type 7412359 (Design consultation), Asia/Kolkata, 30 min", "PASS" if ok_cfg else "FAIL",
+            f"event type {pr.get('event_type_id')}, enabled {f['agent_config']['is_enabled']}")
+    names = {f["function_name"] for f in fns if not f.get("is_custom")}
+    rec("Vaani agent", "both built-in Cal.com tools are attached", "PASS" if {"Check_availability_booking", "book_appointment"} <= names else "FAIL", str(sorted(names)))
 except Exception as ex:
     rec("Vaani agent", "agent reachable", "FAIL", str(ex)[:200])
 
@@ -92,12 +101,6 @@ except Exception as ex:
     rec("Telegram", "bot", "FAIL", str(ex)[:150])
 for c in live:
     rec(f"Call {c['vaani_call_id'][-8:]}", "lead was posted to Telegram", "PASS" if c.get("telegram_message_id") else "FAIL", f"message {c.get('telegram_message_id')}")
-cr = db.rest("GET", "calls?id=gt.0&limit=1&select=id") and None
-try:
-    import urllib.parse as up
-    r = json.loads(http("https://api.supabase.com/v1/projects", headers={"Authorization": "Bearer x"})[1] or b"{}") if False else None
-except Exception:
-    pass
 
 # ---------------- 5. Dashboard ----------------
 s, b, _ = http(f"{BASE}/"); rec("Dashboard", "page opens without a Vercel login", "PASS" if s == 200 and b"Aangan Enquiry Desk" in b else "FAIL", f"HTTP {s}")
@@ -145,7 +148,7 @@ try:
     sl = booking.available_slots()
     rec("Cal.com", "free consultation times offered (Mon-Sat 10-19 IST)", "PASS" if sl["available"] and all(10 <= int(x["start"][11:13]) < 19 for x in sl["slots"]) else "FAIL", f"{len(sl['slots'])} slots, first: {sl['slots'][0]['label'] if sl['slots'] else '-'}")
     bk = calcom._get("/v2/bookings?status=upcoming&take=20").get("data", [])
-    rec("Cal.com", "a real booking has been made by a voice call", "WARN" if not bk else "PASS", f"{len(bk)} upcoming booking(s)" if bk else "none yet: the last voice call hit the example.com email refusal, fixed since; needs one more call to prove")
+    rec("Cal.com", "a real booking has been made by a voice call", "WARN" if not bk else "PASS", f"{len(bk)} upcoming booking(s)" if bk else "none yet. Two causes found and fixed (booking tool pointed at a non-existent event type; the stand-in email was refused). Needs one more voice call to prove")
 except Exception as ex:
     rec("Cal.com", "calendar", "FAIL", str(ex)[:150])
 

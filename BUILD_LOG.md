@@ -249,3 +249,9 @@
 - `aangan/emailer.py` + hook in pipeline: one email per consultation that was REALLY booked (read back from Cal.com), never for a decline, never when nothing was booked. Subject "Consultation booked: <name> - <slot>"; body has the slot, the designer note, and a pointer to the dashboard (no password in the email). Isolated: a failed email never loses a call.
 - Verified: a real sample email reached milindmali1810@gmail.com (status opened). `tools/test_email_logic.py`: 5 checks pass; Telegram and HubSpot suites still pass.
 - Open: store RESEND_API_KEY and NOTIFY_EMAILS on Vercel (Milind's OK); the caller still gets no written confirmation (WhatsApp option needs a WhatsApp Business setup).
+
+### Full recheck (2026-10-10)
+- Wrote tools/verify_all.py (live, read-only; --tests also runs all suites) and SYSTEM_STATUS.md. Result: 63 pass, 3 open items, 0 fail; 79 checks across 6 test suites pass.
+- Bugs the recheck found: book_appointment event type id was 7412344 (does not exist; correct 7412359); Cal.com refuses emails that cannot receive mail (example.com, .invalid) so the stand-in email is now a tagged address of the team mailbox (milindmali1810+<phone>@gmail.com), tested accepted by real Cal.com; the Vaani page's Save Agent had re-enabled the old custom tools (switch script now touches only custom tools); the agent praised/summarised callers (rule added); idle prompt cut a caller off (15/45 s); transcript now sent to Telegram as replies under each lead.
+- Vaani shows booking-tool status "success" even when Cal.com refused, and its AI summary invented a scheduled consultation. Trust Cal.com and our own "Consultation slot" line.
+- Per-turn tool results ARE in GET /api/call_details/{call_id} -> turns_with_percentile_rankings[].tool_calls (name, duration, status), useful for debugging.

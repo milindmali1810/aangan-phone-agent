@@ -1,4 +1,4 @@
-"""Switch the two booking tools on or off for the agent, to find which part causes an error.
+"""Switch our two CUSTOM booking tools (create_slot, create_booking) on or off. The built-in Cal.com tools are never touched.
    python tools/vaani_tools_switch.py off      (both off)
    python tools/vaani_tools_switch.py on       (both on)
    python tools/vaani_tools_switch.py status"""
@@ -23,8 +23,9 @@ mode = sys.argv[1] if len(sys.argv) > 1 else "status"
 fs = copy.deepcopy(patch({})["persona"]["actions"]["functions"])
 if mode in ("on", "off"):
     for f in fs:
-        f["agent_config"]["is_enabled"] = (mode == "on")
+        if f.get("is_custom"):  # only OUR two custom tools; never touch the built-in Cal.com tools
+            f["agent_config"]["is_enabled"] = (mode == "on")
     print("warnings:", patch({"actions": {"functions": fs}}).get("warnings"))
     fs = patch({})["persona"]["actions"]["functions"]
 for f in fs:
-    print(f["function_name"], "enabled:", f["agent_config"]["is_enabled"])
+    print(f["function_name"], "| custom:", bool(f.get("is_custom")), "| enabled:", f["agent_config"]["is_enabled"])
