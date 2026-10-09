@@ -129,3 +129,11 @@
 - Made the claim robust: if Telegram refuses to acknowledge an old press, the claim is still saved and the button/reply are still sent.
 - Test row deleted.
 - Next: store the three Telegram settings on Vercel (needs Milind's OK, new keys), set Telegram's webhook to /api/telegram_webhook with a secret header, add the reminder timer, retest live.
+
+### Phase 4 step 3: live and verified (2026-10-09)
+- Stored TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET, CRON_SECRET (sensitive) and TELEGRAM_CHAT_ID on the Vercel project aangan-webhook. Generated two new secrets: Telegram's header secret, and a CRON_SECRET used only by /api/reping, so the timer key can do nothing except trigger reminders.
+- setWebhook points Telegram at /api/telegram_webhook (only callback_query updates, secret header checked; a wrong secret is refused).
+- Reminder timer: Supabase pg_cron + pg_net, job `aangan-reping`, every minute, calls /api/reping. Verified: ran, got HTTP 200, "checked 0" with nothing due.
+- Live test: sent a test lead, moved its notified time back 40 minutes; the timer found it within a minute and posted "Still unclaimed after 40 minutes"; Milind pressed Claim in Telegram and the claim (who + time) was recorded in the database through the live connection. Telegram webhook shows no errors. Test row deleted.
+- Note: the pg_cron job text holds CRON_SECRET inside the database (visible only to database admins). Rotate it with the other secrets before go-live.
+- Phase 4 left to consider: email fallback if Telegram fails (optional, last), and a separate quiet group for declines (set TELEGRAM_FYI_CHAT_ID).
