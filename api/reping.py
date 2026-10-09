@@ -1,4 +1,5 @@
-"""Called every few minutes by a timer. Reminds the group about unclaimed leads.  /api/reping?token=<WEBHOOK_SECRET>"""
+"""Called every few minutes by a timer. Reminds the group about unclaimed leads.  /api/reping?token=<CRON_SECRET>"""
+import hmac
 import json
 import os
 import sys
@@ -7,7 +8,7 @@ from urllib.parse import parse_qs, urlparse
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from aangan import pipeline, telegram  # noqa: E402
+from aangan import env, telegram  # noqa: E402
 
 
 class handler(BaseHTTPRequestHandler):
@@ -16,7 +17,8 @@ class handler(BaseHTTPRequestHandler):
 
     def _run(self):
         token = parse_qs(urlparse(self.path).query).get("token", [""])[0]
-        if not pipeline.token_ok(token):
+        secret = env.get("CRON_SECRET") or ""  # its own key: it can only trigger reminders, nothing else
+        if not secret or not hmac.compare_digest(token, secret):
             code, body = 401, {"ok": False}
         else:
             try:
