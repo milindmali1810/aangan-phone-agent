@@ -14,7 +14,13 @@ from . import env
 from .hubspot import normalize_phone
 
 IST = timezone(timedelta(hours=5, minutes=30))
-NO_EMAIL_DOMAIN = "no-email.aangan.invalid"  # placeholder; if Cal.com refuses it we switch to example.com (see BUILD_LOG)
+def _fallback_email(digits):
+    """Cal.com refuses addresses that cannot receive mail (example.com, .invalid). A caller with no email gets a tagged address of the
+    studio's own mailbox (the first NOTIFY_EMAILS entry), so Cal.com accepts it and its confirmation reaches the team."""
+    first = (env.get("NOTIFY_EMAILS") or "").split(",")[0].strip()
+    local, _, domain = first.partition("@")
+    return f"{local}+{digits}@{domain}" if domain else f"phone-{digits}@example.com"
+
 
 
 def _cal(method, path, version, body=None):
@@ -81,7 +87,7 @@ def book(start, name, phone, email=None):
     digits = re.sub(r"\D", "", phone_n or phone or "") or "unknown"
     email = (email or "").strip()
     if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
-        email = f"phone-{digits}@{NO_EMAIL_DOMAIN}"
+        email = _fallback_email(digits)
     attendee = {"name": name, "email": email, "timeZone": "Asia/Kolkata", "language": "en"}
     if phone_n:
         attendee["phoneNumber"] = phone_n

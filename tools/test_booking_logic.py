@@ -28,7 +28,7 @@ b = calls[-1][2]
 check("booking succeeds with a plain-language confirmation", res["booked"] and "Monday 12 October at 10:30 AM" in res["message"])
 check("time sent to Cal.com in UTC", b["start"] == "2026-10-12T05:00:00Z")
 check("phone normalised to +91", b["attendee"]["phoneNumber"] == "+919822112233")
-check("no email -> placeholder email so Cal.com accepts it", b["attendee"]["email"].endswith("@" + booking.NO_EMAIL_DOMAIN))
+check("no email -> placeholder email so Cal.com accepts it", b["attendee"]["email"].endswith("@gmail.com") and "+" in b["attendee"]["email"].split("@")[0])
 res2 = booking.book("2026-10-12T10:30:00+05:30", "TEST Asha", "9822112233", "asha@example.com")
 check("real email is used when the caller gives one", calls[-1][2]["attendee"]["email"] == "asha@example.com")
 check("missing name -> asked, nothing sent", (lambda n: booking.book("2026-10-12T10:30:00+05:30", "", "9822112233")["booked"] is False and len(calls) == n)(len(calls)))

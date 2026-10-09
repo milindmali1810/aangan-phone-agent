@@ -76,6 +76,14 @@ try:
     d = row(1)
     check("designer_notified_at and message ids saved", d["designer_notified_at"] and d["telegram_message_id"] == r1["telegram_message"])
 
+    tr = [b for k, b in sent if k == "sendMessage" and b.get("text", "").startswith("Transcript")]
+    check("the transcript is sent as a reply under the lead", len(tr) == 1 and tr[0]["reply_to_message_id"] == r1["telegram_message"] and "AGENT:" in tr[0]["text"])
+    long_t = "\n".join(f"[00:{i:02d}] USER: line number {i} " + "x" * 80 for i in range(120))
+    sent.clear(); n = telegram.send_transcript("-100111", 5, long_t)
+    check("a long transcript is split into several messages, none over 4,096 characters", n >= 3 and all(len(b["text"]) <= 4096 for k, b in sent) and "(1/" in sent[0][1]["text"])
+    check("nothing is lost when splitting", "line number 119" in sent[-1][1]["text"] and "line number 0 " in sent[0][1]["text"])
+    sent.clear()
+
     # 2. a decline is posted to the FYI group, with NO button and NO notified clock
     sent.clear()
     make_call(2, NOT_FIT)

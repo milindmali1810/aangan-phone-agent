@@ -73,7 +73,28 @@ def send_lead(saved, row, result):
     if claimable:
         patch["designer_notified_at"] = datetime.now(timezone.utc).isoformat()
     db.rest("PATCH", f"calls?id=eq.{saved['id']}", patch)
+    try:  # the transcript under the lead; a failure here must not undo the lead itself
+        send_transcript(chat, msg["message_id"], row.get("transcript"))
+    except Exception as ex:
+        print("telegram transcript error:", repr(ex)[:200])
     return msg["message_id"]
+
+
+def send_transcript(chat, reply_to, transcript):
+    """The full transcript, as replies under the lead message (Telegram allows 4096 characters per message, so long ones are split on line breaks)."""
+    text = (transcript or "").strip() or "(no transcript)"
+    chunks, cur = [], ""
+    for line in text.split("\n"):
+        while len(line) > 3800:  # a single very long line
+            chunks.append(line[:3800]); line = line[3800:]
+        if len(cur) + len(line) + 1 > 3800:
+            chunks.append(cur); cur = ""
+        cur += line + "\n"
+    chunks.append(cur)
+    for i, c in enumerate(chunks, 1):
+        head = "Transcript" + (f" ({i}/{len(chunks)})" if len(chunks) > 1 else "") + "\n\n"
+        api("sendMessage", {"chat_id": chat, "reply_to_message_id": reply_to, "text": head + c.rstrip()})
+    return len(chunks)
 
 
 def _person(user):

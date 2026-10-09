@@ -44,6 +44,10 @@ prompt = (ROOT / "prompts" / "voice_agent.md").read_text(encoding="utf-8").repla
 # The two Cal.com tools built into Vaani (Persona -> Actions -> Integration Tools), written the way Vaani wants them in a prompt.
 SLOTS_TOOL, BOOK_TOOL = "@Check_availability_booking", "@book_appointment"  # Vaani calls a tool from the prompt with an @ in front of its name
 prompt = prompt.replace("{{SLOTS_TOOL}}", SLOTS_TOOL).replace("{{BOOK_TOOL}}", BOOK_TOOL)
+# Cal.com refuses emails that cannot receive mail (example.com, .invalid), so a caller with no email gets a tagged address of the studio's own mailbox
+_first = (env("NOTIFY_EMAILS") or "").split(",")[0].strip()
+_local, _, _domain = _first.partition("@")
+prompt = prompt.replace("{{EMAIL_PATTERN}}", f"{_local}+<caller's phone number>@{_domain}" if _domain else "an email address of the studio")
 agent_id = env("VAANI_AGENT_ID")
 
 if "--show" in sys.argv:
@@ -68,8 +72,8 @@ print("persona warnings:", persona.get("warnings"))
 exp = call("PATCH", f"/agent/{agent_id}/experience", {
     "settings": {
         "call_settings": {"max_duration_enabled": True, "max_call_duration": MAX_CALL_MINUTES},
-        "idle_conversation_settings": {"end_conversation_on_idle": True, "idle_call_warning_timeout": 10,
-                                       "idle_call_hangup_timeout": 20},
+        "idle_conversation_settings": {"end_conversation_on_idle": True, "idle_call_warning_timeout": 15,
+                                       "idle_call_hangup_timeout": 45},  # callers think and spell things out; 10/20 cut a caller off mid-thought
     }
 })
 print("experience warnings:", exp.get("warnings"))
