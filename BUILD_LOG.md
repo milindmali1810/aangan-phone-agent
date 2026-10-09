@@ -192,3 +192,10 @@
 - Lesson: anything written in an agent prompt can be spoken. Keep internal labels out of it, and test in the real chat before trusting wording.
 - Also in that screenshot the sentence was cut off ("...or when are"); to watch in the next test (may only have been the screenshot).
 - No booking has been made in Cal.com yet (checked: 0 on the Design consultation event).
+
+### Timeline rule refined (2026-10-09)
+- In the first chat test Milind said "start tomorrow, completed in the next 1 month" and the agent declined with the polite close. That was the A2 rule working (services.md: cannot start a project that must be ready in under 6 weeks), but Milind wanted the agent to understand the requirement and judge it, not decline bluntly.
+- New rule (details in rubric.md section 6): a START date or POSSESSION date is never a deadline; only a FINISH date is checked. Under 6 weeks and firm = decline (with the real reason); under 6 weeks but flexible/unclear = flag; the agent asks ONE question ("firm date, or some flexibility?") before declining. Latest date wins.
+- Changed: prompts/voice_agent.md (new "Timelines" section), prompts/classify.md, classifier.py (new field deadline_firm; apply_timeline_rule).
+- Testing: first attempt made 4 good leads (F06, T15, W01, W06) drop from Forward to Flag because "no finish date" was treated as unclear. Fixed: a start/possession date or flexibility with no finish date = pass; only NO timing at all = unclear. Regression: 0 of 40 outcomes changed. New `tools/test_timeline_cases.py`: 8 synthetic cases, all pass (firm finish in a month = decline; flexible = flag; firmness unsaid = flag; start tomorrow / possession next month with no finish date = forward; 3 months = forward; firm 8 weeks = flag; no timing = flag).
+- Lesson: when a rule is tightened, re-run the whole set; it caught a side effect the new tests would not have.

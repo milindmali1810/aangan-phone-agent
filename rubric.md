@@ -109,3 +109,17 @@ Required disclaimer, every time: "This is only an indicative range, not an exact
 Risks to tell Nikhil: this goes against the "indicative only, no number to be quoted" note in `pricing.md`, so he must approve it. A caller may hold the studio to the number; a premium kitchen can cost 3x a standard one, so the range is wide on purpose.
 
 Quoting never decides the bucket on its own. The bucket still comes from the budget the caller volunteers (section 2).
+
+## 6. Timeline rule, refined (Milind's request, 2026-10-09)
+
+The old rule ("under 6 weeks = decline") was too blunt. The agent and the classifier now tell three different things apart, and only the third can fail:
+
+| What the caller says | Example | Result |
+|---|---|---|
+| A **start** date | "I can start tomorrow", "as soon as possible" | Fine. Not a deadline. Design starts first. |
+| A **possession / handover** date | "I get the keys next month" | Fine. The work starts after possession anyway. |
+| A **finish** date (ready to live or work in) | "finished in a month", "move in by December" | This is the deadline that is checked. |
+
+For a finish date: 10 weeks or more away = fits. 6 to 10 weeks = fits with a flag (tight, designer to confirm). **Under 6 weeks AND firm = decline**, with the real reason given warmly. **Under 6 weeks but flexible or firmness not stated = flag, not decline** (the agent asks "Is that a firm date, or is there some flexibility?" first). If the caller changes the date, the latest one counts. If the caller gave no timing information at all = flag.
+
+Reason: design takes 3-4 weeks and building 8-16 weeks (`services.md`), so a firm finish under about 6 weeks cannot be met, but a good lead must never be lost on a misunderstanding. Where it lives: `prompts/voice_agent.md` (what the caller hears), `prompts/classify.md` and `aangan/classifier.py` (`apply_timeline_rule`, setting MIN_LEAD_WEEKS = 6 in `aangan/config.py`). Still needs Nikhil's confirmation.

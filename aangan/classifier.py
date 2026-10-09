@@ -33,6 +33,7 @@ SCHEMA = {
         "designed_area_sqft": {"type": "NUMBER", "nullable": True},
         "timeline_text": {"type": "STRING"},
         "weeks_until_deadline": {"type": "NUMBER", "nullable": True},
+        "deadline_firm": {"type": "STRING", "enum": ["yes", "no", "unclear"], "nullable": True},
         "decision_maker_text": {"type": "STRING"},
         "budget_lakh_min": {"type": "NUMBER", "nullable": True},
         "budget_lakh_max": {"type": "NUMBER", "nullable": True},
@@ -132,12 +133,17 @@ def budget_check(x):
 
 
 def apply_timeline_rule(x):
-    """The model only reports how many weeks away the deadline is; THIS code applies the thresholds (A2)."""
+    """The model only reports how many weeks away the COMPLETION deadline is, and whether it is firm; THIS code applies the thresholds (A2).
+    Only a FIRM completion date under the minimum fails. A flexible or unclear one is a flag, so a good lead is never lost on a guess."""
     w = x.get("weeks_until_deadline")
     if w is None:
         return
-    result = "fail" if w < C.MIN_LEAD_WEEKS else "borderline" if w <= C.FLAG_LEAD_WEEKS else "pass"
-    x["timeline"] = {"result": result, "evidence": f"{x['timeline'].get('evidence', '')} (about {w:g} weeks away)".strip()}
+    firm = x.get("deadline_firm") == "yes"
+    if w < C.MIN_LEAD_WEEKS:
+        result = "fail" if firm else "borderline"
+    else:
+        result = "borderline" if w <= C.FLAG_LEAD_WEEKS else "pass"
+    x["timeline"] = {"result": result, "evidence": f"{x['timeline'].get('evidence', '')} (finish about {w:g} weeks away, firm: {x.get('deadline_firm') or 'unclear'})".strip()}
 
 
 def decide(x):
