@@ -2,7 +2,7 @@
 
 **Checked live on 10 October 2026**, by `python tools/verify_all.py --tests` against the real services (Vaani, Vercel, Supabase, Telegram, HubSpot, Cal.com, Resend).
 
-**Result: 63 live checks pass, 0 fail, 3 open items. All 79 checks in the 6 test suites pass.**
+**Result: 64 live checks pass, 0 fail, 2 open items. All 79 checks in the 6 test suites pass.**
 
 The honest summary: everything on your list works and is verified, **except one thing that is not yet proven**: a booking made *by a voice call* and the confirmation email that follows it. Two bugs that blocked it were found and fixed in this recheck. One more voice call proves it (see section 4).
 
@@ -15,7 +15,7 @@ The honest summary: everything on your list works and is verified, **except one 
 | 1 | **The voice AI agent** (what it says and does) | **Correct** | 12 instruction rules checked in the live agent (one question per turn, never repeats back, no praise or commentary, price only as three ranges with the disclaimer, firm-deadline logic, polite close, complaints to a human, never asks for an email, no leftover template text). Behaviour confirmed on 3 real voice calls. |
 | 2 | **The Vaani agent** (its configuration) | **Correct** | Agent running; greeting set; 5-minute cap; idle prompt 15 s / hang-up 45 s; 34 Pune place names in speech recognition; both built-in Cal.com tools attached, ON, pointing at the Design consultation event type (7412359), Asia/Kolkata, 30 minutes; our old custom booking tools OFF. |
 | 3 | **The Telegram bot** | **Correct** | Bot reachable, group exists, button presses reach our server with no errors, 3 real leads posted (messages 10, 11, 12), Claim button, first-claim-wins, 30-minute reminders (timer runs every minute). 22 test checks pass. |
-| 4 | **The mail after a booking** | **Built and tested; not yet live** | A real sample email was delivered and opened. Trigger rules tested: sent only when a consultation is really booked, never for a decline. **Not yet switched on in the live server** (section 4). Goes to the **team** address, not the caller. |
+| 4 | **The mail after a booking** | **Built, tested and switched on; first real one awaits the proving call** | A real sample email was delivered and opened. Trigger rules tested: sent only when a consultation is really booked, never for a decline. The email settings are now on the live server (all 14 settings seen). Goes to the **team** address (milindmali1810@gmail.com), not the caller. |
 | 5 | **Transcript in the dashboard and in Telegram** | **Correct** | Dashboard: transcript, evidence per criterion, recording (audio plays, `audio/ogg`) shown behind the password. Telegram: the transcript is sent as a reply under every lead (long ones split under 4,096 characters). Your 3 real calls were backfilled; every new call gets it automatically. |
 | 6 | **Leads going to HubSpot** | **Correct** | All 3 real calls have a contact and a deal, in the **New enquiry** stage, with the handoff note. Calls 2 and 3 used the same phone number and **share one contact** (repeat caller recognised, not duplicated). No price is ever stored. |
 
@@ -54,7 +54,7 @@ Costs are recorded per call (about Rs 6 to 15 for voice, under a cent for the AI
 | Open item | What it needs |
 |---|---|
 | **A booking made by a voice call.** Both blockers are fixed, but no call has run since. | One voice call (about Rs 12 to 17): say yes, pick a time. I then check Cal.com and cancel the test booking. |
-| **Email on the live server.** `RESEND_API_KEY` and `NOTIFY_EMAILS` are only on this computer. | Your OK to store the two settings on Vercel (hidden), then redeploy. |
+| ~~Email on the live server.~~ **Done 10 Oct:** `RESEND_API_KEY` and `NOTIFY_EMAILS` stored on Vercel and confirmed live. | Nothing; it fires on the first real booking. |
 | **Email to the caller.** The agent deliberately does not ask for an email (spoken emails are misheard), and Resend has no sending domain, so nobody but you can be emailed yet. | Decide: WhatsApp or SMS confirmation to the caller, and/or a verified domain so Nikhil and the designers get the email too. |
 
 ---
