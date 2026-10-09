@@ -39,6 +39,14 @@ def api(method, body):
         raise RuntimeError(f"Telegram {method} -> HTTP {e.code}: {e.read()[:200].decode()}")
 
 
+def _answer(cq, **kw):
+    """Acknowledge a button press. Telegram refuses this if the press is old; the claim itself is already saved."""
+    try:
+        api("answerCallbackQuery", {"callback_query_id": cq["id"], **kw})
+    except RuntimeError:
+        pass
+
+
 def _claim_button(call_id):
     return {"inline_keyboard": [[{"text": "Claim this lead", "callback_data": f"claim:{call_id}"}]]}
 
@@ -85,11 +93,10 @@ def handle_update(update):
                   "return=representation")
     if not won:
         row = db.rest("GET", f"calls?id=eq.{call_id}&select=designer_claimed_by") or [{}]
-        api("answerCallbackQuery", {"callback_query_id": cq["id"], "show_alert": True,
-                                    "text": f"Already claimed by {row[0].get('designer_claimed_by', 'someone else')}"})
+        _answer(cq, show_alert=True, text=f"Already claimed by {row[0].get('designer_claimed_by', 'someone else')}")
         return {"claimed": False}
     row = won[0]
-    api("answerCallbackQuery", {"callback_query_id": cq["id"], "text": "It's yours. Please call the lead."})
+    _answer(cq, text="It's yours. Please call the lead.")
     chat = row["telegram_chat_id"]
     for message_id in {row["telegram_message_id"], cq["message"]["message_id"]}:  # original + any reminder
         try:

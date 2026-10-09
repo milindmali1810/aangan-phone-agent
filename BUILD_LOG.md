@@ -122,3 +122,10 @@
 - `tools/test_telegram_logic.py`: 19 checks with a FAKE Telegram and the REAL database, all passing: routing, button, FYI for declines, first click wins, second told "Already claimed by X", 6 simultaneous clicks -> exactly 1 winner, reminders only for unclaimed leads, none twice within 30 minutes, again after 30.
 - What broke: the reminder query put a timestamp with "+00:00" in a web address, where "+" means a space, so the database refused it. Fix: URL-encode it. Lesson: always encode values you put in a URL. One test failed because of my own test (same fake name in two calls), not the code.
 - Waiting for: Milind's bot token (BotFather) and the group; then set the Telegram webhook, store the three Telegram settings on Vercel, add a timer for /api/reping, and do a real test in the group.
+
+### Phase 4 step 2: real Telegram test (2026-10-09)
+- Bot token verified (getMe): @aangan_leads1810_bot. Group "Milind and Aangan Leads" (private, 2 members: Milind + bot), chat id saved as TELEGRAM_CHAT_ID. Chose a GROUP, not a channel: designers can reply, and Telegram tells us exactly who pressed the button.
+- Sent one real test lead through the real code path. Milind could not "claim" it: the Telegram -> our server connection (setWebhook) is not set yet, so presses wait in Telegram's queue. Both presses were queued. Processed them by hand with the real handler: first press claimed (designer_claimed_by Milind), second refused. Claim time was 10 minutes only because I processed it late.
+- Made the claim robust: if Telegram refuses to acknowledge an old press, the claim is still saved and the button/reply are still sent.
+- Test row deleted.
+- Next: store the three Telegram settings on Vercel (needs Milind's OK, new keys), set Telegram's webhook to /api/telegram_webhook with a secret header, add the reminder timer, retest live.
