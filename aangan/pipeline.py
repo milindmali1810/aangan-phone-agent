@@ -10,7 +10,7 @@ import hmac
 from datetime import datetime, timedelta, timezone
 
 from . import config as C
-from . import calcom, db, env, hubspot, telegram
+from . import calcom, db, emailer, env, hubspot, telegram
 from .classifier import classify_text
 
 IST = timezone(timedelta(hours=5, minutes=30))
@@ -167,6 +167,13 @@ def _process_call(e):
         except Exception as ex:
             out["telegram_error"] = str(ex)[:200]
             print("telegram error:", repr(ex)[:300])
+    # Email the team the booked slot (only when a consultation was really booked in Cal.com); isolated like the others
+    if booking and emailer.enabled():
+        try:
+            out["email"] = emailer.send_booking(row["caller_name"], calcom.pretty(booking), r["handoff_note"], r["outcome"])
+        except Exception as ex:
+            out["email_error"] = str(ex)[:200]
+            print("email error:", repr(ex)[:300])
     # HubSpot: also isolated, so a CRM problem never loses a call; the error is kept on the row for a retry
     if hubspot.enabled():
         try:
