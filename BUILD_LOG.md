@@ -94,3 +94,8 @@
   5. Handoff note pointed at a transcript file that doesn't exist for live calls. Now shows call id and recording link.
 - Assumptions to confirm: Rs 5.5 a minute and 88 rupees to the dollar for voice cost; first response = call start (the agent greets the moment the call connects).
 - Not done yet: deploying the receiver (needs the Gemini key, Supabase secret key and webhook secret stored on Vercel), registering the address in Vaani, HubSpot and Telegram steps.
+
+### Phase 5 step 3: receiver deployed (2026-10-09)
+- Created Vercel project `aangan-webhook`, connected to the GitHub repo (pushes to main redeploy it). Stored GEMINI_API_KEY, SUPABASE_SECRET_KEY, WEBHOOK_SECRET as sensitive settings and SUPABASE_URL as plain. Deployment READY at https://aangan-webhook.vercel.app/api/vaani_webhook
+- Blocked: Vercel Authentication (default protection) redirects every request to a Vercel login (HTTP 302), so Vaani's webhook would never reach it. Needs Milind to switch protection off for this project; the endpoint is guarded by the secret token in the URL instead.
+- Next: after that toggle, run `tools/fake_calls.py` against the deployed address, then register the address in Vaani (Settings -> Webhooks).
