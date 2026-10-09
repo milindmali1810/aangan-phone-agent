@@ -16,7 +16,7 @@ Rules applied: `rubric.md` (A1 failures, A2 timeline, proposed 75% budget cut-of
 | 2 | F10 | FORWARD_WITH_FLAG | In area, real scope, decision-makers are the couple. Budget 18-22 lakh for 1,300 sq ft is about 1,385-1,690 per sq ft, between 75% and 100% of the 1,800 floor | Medium: depends on the proposed 75% line |
 | 3 | T04 | DECLINE | Wants ideas on colours and arrangement only, "just exploring". Fails criterion 1 | High |
 | 4 | T02 | FORWARD | Wakad, 950 sq ft full redesign, owner speaking, design from October. Price question is not a disqualifier | High |
-| 5 | F03 | DECLINE | Talegaon Dabhade is explicitly out of area. Budget of 15-20 lakh for 1,400 sq ft is also under the 75% line. Fails criteria 2 and 4 | High |
+| 5 | F03 | DECLINE | Talegaon Dabhade is explicitly out of area. Budget of 15-20 lakh for 1,400 sq ft is about 1,070-1,430 per sq ft, which straddles the 75% line (1,350), so it is not decisive. Fails criterion 2 | High |
 | 6 | T18 | FORWARD_WITH_FLAG | 180 sq ft commercial pod. No file sets a minimum size. Location and timeline not given. Front desk declined for a "500 sq ft minimum" that exists in no rules file | Low: needs Nikhil |
 | 7 | T10 | DECLINE | Volunteers 1-1.5 lakh for kitchen plus bedroom. Below the 3.5 lakh single-room floor, about 30-43% of it, under the 75% line. Fails criterion 4 | High |
 | 8 | T14 | FORWARD_WITH_FLAG | Hadapsar (in area). Caller is the son, "initial checking", parents decide and will attend. Timeline not given. Criterion 5 unclear | High |
