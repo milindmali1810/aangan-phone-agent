@@ -156,3 +156,10 @@
 - `tools/test_hubspot_real.py` (4 fake calls, names start with TEST, phones +91900000000x): good lead -> contact (Open) + deal (High, New enquiry, linked to the contact) + notes on both; same phone calling again and declined -> no duplicate contact, status stayed Open, new note; new-phone decline -> Unqualified contact + reason note, no deal; re-delivery -> skipped. The association ids (note-to-contact 202, note-to-deal 214, deal-to-contact 3) are correct. Everything created was deleted afterwards; the CRM is back to its two built-in sample contacts.
 - HubSpot behaviour to know: once a contact has a deal, HubSpot automatically moves their Lifecycle Stage from Lead to Opportunity.
 - Next: store HUBSPOT_TOKEN on Vercel (needs Milind's OK) so live calls reach HubSpot.
+
+### Live full-chain test (2026-10-09)
+- Stored HUBSPOT_TOKEN on Vercel (sensitive). First live chain test: Telegram worked but HubSpot did not run. Cause: that deployment had not picked up the new setting even though it was created after it. Added a health check to the receiver (GET with the secret returns which settings the live server sees, yes/no only), redeployed, saw all nine settings true, re-ran: PASS.
+- `tools/test_live_chain.py`: one fake call through https://aangan-webhook.vercel.app/api/vaani_webhook -> classifier -> database -> Telegram message (deleted afterwards) -> HubSpot contact + deal in "New enquiry" (deleted afterwards, with their notes). Database, HubSpot and Telegram all cleaned.
+- Lesson: after adding a setting on Vercel, check the live server actually sees it (health check) before concluding anything.
+- Everything after a call ends is now live: Vaani -> receiver -> classifier -> database -> Telegram + HubSpot -> dashboard totals.
+- Remaining: Phase 6 booking (Cal.com), per-call dashboard page (login + recording + transcript), redeploy dashboard with new banner, one real WebRTC test call (Rs 100 credit), rotate secrets, Phase 4 optimisation (Milind's request), Nikhil questions list.
