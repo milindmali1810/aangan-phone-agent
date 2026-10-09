@@ -38,6 +38,11 @@ QUOTE_PRICE_RANGE = True
 VOICE_RATE_INR_PER_MIN = 5.5
 INR_PER_USD = 88.0
 
+# HubSpot. New deals start in this stage of the default "Sales Pipeline". The free plan allows one pipeline, and its
+# first stage is named "Appointment Scheduled", which is misleading before a consultation is booked: see the
+# open question to Milind about renaming it.
+HUBSPOT_DEAL_STAGE = "appointmentscheduled"
+
 # Telegram handoff. REPING_MINUTES is Milind's proposal to Nikhil, not Nikhil's rule.
 REPING_MINUTES = 30   # re-ping the group if a lead is still unclaimed after this long
 REPING_MAX = 6        # stop after this many reminders so a forgotten lead cannot spam the group all night

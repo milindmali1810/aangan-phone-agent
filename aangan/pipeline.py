@@ -10,7 +10,7 @@ import hmac
 from datetime import datetime, timedelta, timezone
 
 from . import config as C
-from . import db, env, telegram
+from . import db, env, hubspot, telegram
 from .classifier import classify_text
 
 IST = timezone(timedelta(hours=5, minutes=30))
@@ -156,5 +156,12 @@ def _process_call(e):
         except Exception as ex:
             out["telegram_error"] = str(ex)[:200]
             print("telegram error:", repr(ex)[:300])
-    # --- Phase 3 plugs in here: send the contact (and a deal for FORWARD / FORWARD_WITH_FLAG) to HubSpot ---
+    # HubSpot: also isolated, so a CRM problem never loses a call; the error is kept on the row for a retry
+    if hubspot.enabled():
+        try:
+            out["hubspot"] = hubspot.sync_call(saved, row)
+        except Exception as ex:
+            out["hubspot_error"] = str(ex)[:300]
+            print("hubspot error:", repr(ex)[:300])
+            db.rest("PATCH", f"calls?id=eq.{saved['id']}", {"hubspot_error": str(ex)[:500]})
     return out

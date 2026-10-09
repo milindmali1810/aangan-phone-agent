@@ -141,3 +141,11 @@
 ## TO REVISIT LATER (Milind's request, 2026-10-09)
 - **Phase 4 (Telegram): Milind wants to come back and optimise it.** Working today: lead post with Claim button, first-claim-wins, 30-minute reminders (max 6), declines as quiet FYI. Ideas on the table: separate quiet group for declines (TELEGRAM_FYI_CHAT_ID), reminder timing, message wording/length, email fallback if Telegram fails, privacy of customer numbers in the chat. REMIND MILIND at the end of each phase and before wrapping up.
 - Rotate before go-live: Gemini key, Supabase secret key, Vaani key, webhook secret, Telegram bot token (BotFather /revoke), CRON_SECRET (also stored in the pg_cron job).
+
+## Phase 3: HubSpot (built, 2026-10-09; real-API test waiting for a token)
+- HubSpot account "Aangan Studio" (id 247643487) is connected to Claude through the HubSpot connector (works for Claude in a session only). It has HubSpot's two built-in sample contacts (left untouched) and the standard "Sales Pipeline" (7 stages, one pipeline on the free plan).
+- Built `aangan/hubspot.py` + hook in `pipeline.py` (isolated: a CRM error never loses a call; the error is kept on the call row). Rules: every caller becomes a contact (declines too, with the reason in a note); FORWARD / FORWARD_WITH_FLAG also become a deal with the handoff note, priority High if referred; a repeat caller is found by phone (+91 normalised) and never duplicated, gets a "REPEAT CALLER" note, and a decline never overwrites an Open status; a call delivered twice makes nothing new (ids stored on the call row); no name and no phone = no junk contact. No price is ever put in HubSpot.
+- New columns on `calls`: hubspot_contact_id, hubspot_deal_id, hubspot_error. Setting HUBSPOT_DEAL_STAGE in `aangan/config.py`.
+- `tools/test_hubspot_logic.py`: 20 checks with a FAKE HubSpot and the REAL database, all passing.
+- NOT yet verified against the real HubSpot API: the endpoint shapes and the standard association ids (note to contact 202, note to deal 214, deal to contact 3). Needs HUBSPOT_TOKEN (private app: contacts, deals, notes read/write only) on this computer and on Vercel.
+- Open question for Milind: the free pipeline's first stage is called "Appointment Scheduled", which is misleading before a consultation is booked. Options: rename it to "New enquiry" (changes the CRM setup), or leave it.
