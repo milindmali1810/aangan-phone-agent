@@ -149,3 +149,10 @@
 - `tools/test_hubspot_logic.py`: 20 checks with a FAKE HubSpot and the REAL database, all passing.
 - NOT yet verified against the real HubSpot API: the endpoint shapes and the standard association ids (note to contact 202, note to deal 214, deal to contact 3). Needs HUBSPOT_TOKEN (private app: contacts, deals, notes read/write only) on this computer and on Vercel.
 - Open question for Milind: the free pipeline's first stage is called "Appointment Scheduled", which is misleading before a consultation is booked. Options: rename it to "New enquiry" (changes the CRM setup), or leave it.
+
+### Phase 3 result: verified against the real HubSpot (2026-10-09)
+- Milind created a HubSpot service key (HubSpot replaced private apps with service keys; Legacy apps are not available on this account) with four scopes: crm.objects.contacts.read/write and crm.objects.deals.read/write. The two notes scopes in my first list do not exist as separate scopes; HubSpot's docs say notes need only contacts.write. Saved as HUBSPOT_TOKEN in .env. NOT yet stored on Vercel.
+- Renamed the first deal stage "Appointment Scheduled" -> "New enquiry" (Milind approved). HubSpot gave it a new id 4417021666; HUBSPOT_DEAL_STAGE updated. The other six stages are unchanged.
+- `tools/test_hubspot_real.py` (4 fake calls, names start with TEST, phones +91900000000x): good lead -> contact (Open) + deal (High, New enquiry, linked to the contact) + notes on both; same phone calling again and declined -> no duplicate contact, status stayed Open, new note; new-phone decline -> Unqualified contact + reason note, no deal; re-delivery -> skipped. The association ids (note-to-contact 202, note-to-deal 214, deal-to-contact 3) are correct. Everything created was deleted afterwards; the CRM is back to its two built-in sample contacts.
+- HubSpot behaviour to know: once a contact has a deal, HubSpot automatically moves their Lifecycle Stage from Lead to Opportunity.
+- Next: store HUBSPOT_TOKEN on Vercel (needs Milind's OK) so live calls reach HubSpot.
