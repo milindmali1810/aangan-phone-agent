@@ -211,3 +211,8 @@
 - Tested locally against the real database: 401 without/with a wrong password, 40 calls with the right one, transcripts only in the detail view, hostile text neutralised, wrong password stores nothing, Lock clears the table. One flaw found and fixed during testing: locking only hid the rows (still in the page's memory); it now empties them.
 - Recording playback is untested: Vaani's recording_url may need our API key (their /api/stream/{call_id} endpoint takes X-API-Key). Decide after the real test call shows what the url is; a proxy endpoint may be needed.
 - The old protected `dashboard/` project (behind Vercel login) can be retired once this is live.
+
+### Dashboard live (2026-10-10)
+- Stored DASHBOARD_PASSWORD on Vercel (sensitive) and redeployed. Health check shows the live server sees all 12 settings. Live checks: https://aangan-webhook.vercel.app/ -> 200 (the dashboard); /api/calls with no or wrong password -> 401; right password -> 200 with 40 calls and no transcripts in the list. Public totals still work with no password and contain no personal data.
+- Nikhil's access: open the site, type the dashboard password under Calls. No Vercel account needed. The older dashboard at aangan-dashboard (behind Vercel login) is now redundant.
+- Remaining: chat test to booking, one real voice call, fixes, handover sheet, rotate keys.
