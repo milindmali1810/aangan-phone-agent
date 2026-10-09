@@ -181,7 +181,7 @@ def decide(x):
 
 def handoff_note(eid, x, outcome, flags):
     def g(v):
-        return v if v not in (None, "", "not given") else "not given"
+        return v if v not in (None, "", "not given", "not_given", "Not given") else "not given"
     budget = "not given"
     if x.get("budget_lakh_min") or x.get("budget_lakh_max"):
         lo, hi = x.get("budget_lakh_min"), x.get("budget_lakh_max")

@@ -4,5 +4,20 @@
       "includeFiles": "{aangan/**,prompts/**,services.md,qualified.md}",
       "maxDuration": 60
     }
-  }
+  },
+  "headers": [
+    {
+      "source": "/SYSTEM_STATUS.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
+  ]
 }
