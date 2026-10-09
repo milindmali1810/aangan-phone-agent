@@ -80,3 +80,17 @@
 - No call placed, no credit spent.
 - Found: Vaani's OpenAPI file gives call details at `/api/call_details/{client}/{call_id}`, the docs page shows `/api/call_details/{call_id}`. Test which works before relying on either.
 - Next: webhook receiver (needs a public URL on Vercel), register it in Vaani Settings -> Webhooks, then wire classifier -> database. HubSpot and Telegram plug in after.
+
+### Phase 5 step 2: webhook receiver built and tested locally (2026-10-09)
+- Built `aangan/pipeline.py` (what happens when Vaani reports a call), `api/vaani_webhook.py` (the public address; secret token in the URL), `aangan/env.py`, `aangan/db.py`, `tools/fake_calls.py` (fake-call tester), `vercel.json`. Standard library only, no installs.
+- Database: new columns on `calls` (vaani_call_id, room, recording_url, summary, extra intake fields) and a `call_events` table. `vaani_call_id` is unique, so a call delivered twice is saved once.
+- Classifier now also extracts: household notes, headcount, rooms wanted, contact preference, business description.
+- Tested with FAKE calls, no Vaani credit: wrong secret refused (401); good lead -> FORWARD; Nashik office -> DECLINE; complaint -> NEEDS_HUMAN; empty call -> NOT_CLASSIFIED (no AI spend); re-delivery returned the same row; 2 cost rows per call; voice cost 78 s = Rs 7.15 at Rs 5.5/min. Test rows deleted afterwards (40 sample rows remain).
+- What broke and how it was fixed:
+  1. Regression: after my changes T02 flipped from Flag to Decline. Cause: the model was doing date arithmetic and applying the 6-week rule itself, inconsistently. Fix: the model now only reports `weeks_until_deadline`; the thresholds (under 6 = fail, 6-10 = borderline) are applied in code (`apply_timeline_rule`). 0 of 40 outcomes differ from the baseline now; T02 stable over 3 runs.
+  2. Cost rows had mismatched fields (database refused them). Fixed.
+  3. The old test server kept running with old code after I "restarted" it. Lesson: confirm the old process is really gone (check the port) before re-testing.
+  4. The default server log printed the secret from the URL. Silenced.
+  5. Handoff note pointed at a transcript file that doesn't exist for live calls. Now shows call id and recording link.
+- Assumptions to confirm: Rs 5.5 a minute and 88 rupees to the dollar for voice cost; first response = call start (the agent greets the moment the call connects).
+- Not done yet: deploying the receiver (needs the Gemini key, Supabase secret key and webhook secret stored on Vercel), registering the address in Vaani, HubSpot and Telegram steps.

@@ -12,6 +12,7 @@ import urllib.request
 from pathlib import Path
 
 from . import config as C
+from . import env
 
 ROOT = Path(__file__).resolve().parent.parent
 RESULT = {"type": "STRING", "enum": ["pass", "fail", "unclear", "borderline"]}
@@ -31,6 +32,7 @@ SCHEMA = {
         "size_sqft": {"type": "NUMBER", "nullable": True},
         "designed_area_sqft": {"type": "NUMBER", "nullable": True},
         "timeline_text": {"type": "STRING"},
+        "weeks_until_deadline": {"type": "NUMBER", "nullable": True},
         "decision_maker_text": {"type": "STRING"},
         "budget_lakh_min": {"type": "NUMBER", "nullable": True},
         "budget_lakh_max": {"type": "NUMBER", "nullable": True},
@@ -39,6 +41,11 @@ SCHEMA = {
         "owner_or_tenant": {"type": "STRING"},
         "referral": {"type": "STRING"},
         "language": {"type": "STRING"},
+        "household_notes": {"type": "STRING"},
+        "headcount": {"type": "NUMBER", "nullable": True},
+        "rooms_wanted": {"type": "STRING"},
+        "contact_preference": {"type": "STRING"},
+        "business_description": {"type": "STRING"},
         "asked_about_price": {"type": "BOOLEAN"},
         "is_complaint_or_existing_client": {"type": "BOOLEAN"},
         "is_unreachable": {"type": "BOOLEAN"},
@@ -51,17 +58,18 @@ SCHEMA = {
     "required": [
         "caller_name", "phone", "locality", "scope_summary", "scope_kind", "timeline_text",
         "decision_maker_text", "budget_evidence", "site_status", "owner_or_tenant", "referral",
-        "language", "asked_about_price", "is_complaint_or_existing_client", "is_unreachable",
+        "language", "household_notes", "rooms_wanted", "contact_preference", "business_description",
+        "asked_about_price", "is_complaint_or_existing_client", "is_unreachable",
         "real_project", "in_service_area", "timeline", "budget", "decision_maker",
     ],
 }
 
 
 def _env_key():
-    for line in (ROOT / ".env").read_text(encoding="utf-8").splitlines():
-        if line.startswith("GEMINI_API_KEY="):
-            return line.split("=", 1)[1].strip()
-    raise RuntimeError("GEMINI_API_KEY not found in .env")
+    key = env.get("GEMINI_API_KEY")
+    if not key:
+        raise RuntimeError("GEMINI_API_KEY is not set")
+    return key
 
 
 def _prompt(transcript):
@@ -123,8 +131,18 @@ def budget_check(x):
     return "pass", note
 
 
+def apply_timeline_rule(x):
+    """The model only reports how many weeks away the deadline is; THIS code applies the thresholds (A2)."""
+    w = x.get("weeks_until_deadline")
+    if w is None:
+        return
+    result = "fail" if w < C.MIN_LEAD_WEEKS else "borderline" if w <= C.FLAG_LEAD_WEEKS else "pass"
+    x["timeline"] = {"result": result, "evidence": f"{x['timeline'].get('evidence', '')} (about {w:g} weeks away)".strip()}
+
+
 def decide(x):
     """Final outcome from the extracted facts. Returns (outcome, reason, flags)."""
+    apply_timeline_rule(x)
     if x["is_complaint_or_existing_client"]:
         return "NEEDS_HUMAN", "Existing client or complaint: not a new lead; route to a human.", []
     if x["is_unreachable"]:
@@ -165,6 +183,9 @@ def handoff_note(eid, x, outcome, flags):
         f"Caller: {g(x['caller_name'])} | Phone: {g(x['phone'])}",
         f"Locality: {g(x['locality'])} | Type: {x['scope_kind']} | Site: {g(x['site_status'])} | {g(x['owner_or_tenant'])}",
         f"Scope: {g(x['scope_summary'])} ({size})",
+        f"Rooms wanted: {g(x.get('rooms_wanted'))} | Household: {g(x.get('household_notes'))}",
+        f"Business: {g(x.get('business_description'))} | Headcount: {g(x.get('headcount'))}",
+        f"Prefers: {g(x.get('contact_preference'))}",
         f"Needed by: {g(x['timeline_text'])}",
         f"Decides: {g(x['decision_maker_text'])}",
         f"Budget: {budget}",
@@ -176,8 +197,7 @@ def handoff_note(eid, x, outcome, flags):
     return "\n".join(lines)
 
 
-def classify(eid):
-    transcript = (ROOT / "enquiries" / f"{eid}.txt").read_text(encoding="utf-8")
+def classify_text(transcript, eid="live"):
     x, tin, tout = call_gemini(transcript)
     outcome, reason, flags = decide(x)
     cost = tin * C.PRICE_PER_M_INPUT_USD / 1e6 + tout * C.PRICE_PER_M_OUTPUT_USD / 1e6
@@ -189,3 +209,8 @@ def classify(eid):
         "handoff_note": handoff_note(eid, x, outcome, flags),
         "tokens_in": tin, "tokens_out": tout, "cost_usd_estimate": round(cost, 6), "model": C.MODEL,
     }
+
+
+def classify(eid):
+    transcript = (ROOT / "enquiries" / f"{eid}.txt").read_text(encoding="utf-8")
+    return classify_text(transcript, eid)

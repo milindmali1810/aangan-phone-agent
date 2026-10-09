@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "api/vaani_webhook.py": {
+      "includeFiles": "{aangan/**,prompts/**,services.md,qualified.md}",
+      "maxDuration": 60
+    }
+  }
+}

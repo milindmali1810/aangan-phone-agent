@@ -32,3 +32,8 @@ MAX_COMMERCIAL_SQFT = 3000
 
 # Whether the voice agent may speak price ranges (Milind's decision, needs Nikhil's approval).
 QUOTE_PRICE_RANGE = True
+
+# Voice cost. ASSUMPTIONS: the brief says Vaani costs about Rs 5-5.50 a minute; the exchange rate is a guess.
+# Check both before trusting the dashboard's voice cost.
+VOICE_RATE_INR_PER_MIN = 5.5
+INR_PER_USD = 88.0

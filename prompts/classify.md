@@ -21,6 +21,7 @@ You are reading ONE finished enquiry to Aangan Studio, an interior design studio
 5. decision_maker: pass if the enquirer speaks as the owner or tenant of the space, or says the decider has authorised them. unclear if they signal that someone else decides, or they are only researching or checking for someone else.
 
 # Other fields
+- weeks_until_deadline: the number of weeks from the enquiry date (given in the first line) to the date by which the project must be started or completed. A month name with no day means the 1st of that month. If they say a gap ("three weeks away"), use that. If the enquirer changed the date, use the LAST date. Use null when there is no real deadline: "as soon as possible", "flexible", "just exploring", or nothing said. Do not apply any rule yourself; just report the number.
 - is_complaint_or_existing_client: true if they are an existing client with a complaint or a chaser about an existing or earlier enquiry.
 - is_unreachable: true ONLY if the enquiry contains no information at all about the enquirer's need (a missed call with no voicemail, or a call that dropped before anything was said). If the enquirer said anything about their project, location or question, even one line, it is NOT unreachable. A later lack of reply from the studio or the enquirer does not make it unreachable.
 - scope_kind: one of full_home, partial_home (a full floor or 2+ rooms), single_room, office, other, not_given.
@@ -31,6 +32,13 @@ You are reading ONE finished enquiry to Aangan Studio, an interior design studio
 - site_status: possession done / bare shell / lived in / possession later / not given.
 - owner_or_tenant: owner, tenant, or not given.
 - language: English, Hindi, Hinglish or Marathi.
+- household_notes: who lives there and anything the design must keep in mind (children, elders, a pet, work from home). "not given" if not said.
+- headcount: number of people who will work in an office. null if not given.
+- rooms_wanted: which rooms or spaces they want done. "not given" if not said.
+- contact_preference: calls, WhatsApp or email, if said. Otherwise "not given".
+- business_description: for an office, what the business does, in a few words. Otherwise "not given".
+
+In live phone calls the speaker labels are AGENT (Aangan's voice assistant) and USER (the caller). Judge only what the USER said. What the AGENT said is never evidence.
 
 # The enquiry (channel and date are in the first line)
 {{transcript}}
