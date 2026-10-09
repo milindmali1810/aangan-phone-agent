@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aangan Enquiry Desk</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --border: rgba(11,11,11,.10);
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --other: #c3c2b7;
+    --good: #006300; --warn-bg: #fff4d6; --warn-ink: #5c4300;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --border: rgba(255,255,255,.10);
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --other: #383835;
+      --good: #0ca30c; --warn-bg: #3a2f10; --warn-ink: #f3d98b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 24px 16px 56px; }
+  header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  h1 { font-size: 22px; margin: 0; font-weight: 650; }
+  .sub { color: var(--ink2); font-size: 14px; margin: 4px 0 0; }
+  button { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+  button:hover { background: var(--grid); }
+  .banner { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 14px; margin: 16px 0 0; font-size: 14px; }
+  h2 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 32px 0 10px; font-weight: 600; }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .label { color: var(--ink2); font-size: 13px; }
+  .value { font-size: 30px; font-weight: 650; line-height: 1.15; margin: 4px 0 2px; }
+  .value small { font-size: 14px; font-weight: 500; color: var(--ink2); }
+  .why { color: var(--ink2); font-size: 13px; margin: 6px 0 0; }
+  .base { color: var(--muted); font-size: 12px; margin-top: 8px; border-top: 1px solid var(--grid); padding-top: 6px; }
+  .bar { display: flex; height: 18px; gap: 2px; margin: 12px 0; }
+  .bar span { display: block; min-width: 2px; border-radius: 0 4px 4px 0; }
+  .bar span:first-child { border-radius: 4px 0 0 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td { padding: 6px 4px; border-top: 1px solid var(--grid); }
+  td:last-child, th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 8px; vertical-align: -1px; }
+  .empty { color: var(--muted); }
+  .err { color: #d03b3b; }
+  footer { color: var(--muted); font-size: 12px; margin-top: 32px; }
+  @media (max-width: 480px) { .value { font-size: 26px; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Aangan Enquiry Desk</h1>
+      <p class="sub">How fast enquiries get answered, who they go to, and what the tool costs.</p>
+    </div>
+    <button id="refresh" type="button">Refresh</button>
+  </header>
+  <div id="banner"></div>
+  <div id="content"><p class="sub">Loading...</p></div>
+  <footer id="foot"></footer>
+</main>
+
+<script>
+// The publishable key is meant to be public. It can only call dashboard_stats(), which returns totals.
+const SUPABASE_URL = "https://oeelqidjxszikigtdixs.supabase.co";
+const PUBLISHABLE_KEY = "sb_publishable_vXJYxvz6wXqqa7fjSPOPug_fAyqapdm";
+
+const nf = new Intl.NumberFormat("en-IN");
+const usd = (v) => v == null ? "-" : "$" + (v < 1 ? v.toFixed(4) : v.toFixed(2));
+const pct = (n, d) => d ? Math.round(100 * n / d) + "%" : null;
+function dur(s) {
+  if (s == null) return null;
+  if (s < 1) return "Instant";
+  if (s < 90) return Math.round(s) + " sec";
+  if (s < 5400) return Math.round(s / 60) + " min";
+  if (s < 172800) return (s / 3600).toFixed(1) + " hours";
+  return (s / 86400).toFixed(1) + " days";
+}
+function tile(label, value, why, base) {
+  const v = value == null ? '<span class="empty">No data yet</span>' : value;
+  return `<div class="tile"><div class="label">${label}</div><div class="value">${v}</div>` +
+         `<p class="why">${why}</p>${base ? `<div class="base">${base}</div>` : ""}</div>`;
+}
+
+function render(s) {
+  const T = s.total_calls, R = s.response_tracked;
+  const q = s.qualified;
+  const other = s.needs_human + s.not_classified;
+  const segs = [
+    ["Forward", s.forward, "var(--s1)", "Passes every check; goes to a designer"],
+    ["Forward with flag", s.forward_with_flag, "var(--s2)", "Goes to a designer with one doubt noted"],
+    ["Decline", s.decline, "var(--s3)", "Not a fit; logged with the reason"],
+    ["Needs a human / missed", other, "var(--other)", "Complaints, existing clients, missed calls"],
+  ];
+  const bar = segs.filter(x => x[1] > 0).map(x => `<span style="flex:${x[1]};background:${x[2]}" title="${x[0]}: ${x[1]}"></span>`).join("");
+  const rows = segs.map(x => `<tr><td><span class="dot" style="background:${x[2]}"></span>${x[0]} <span class="empty">- ${x[3]}</span></td><td>${x[1]}</td></tr>`).join("");
+  const perCall = T ? s.total_cost_usd / T : null;
+  const perQual = q ? s.total_cost_usd / q : null;
+
+  document.getElementById("banner").innerHTML = s.live_rows === 0
+    ? `<div class="banner"><b>Sample data.</b> These ${s.sample_rows} rows are the September enquiries run through the classifier. No live calls yet, so speed and handoff numbers are from the studio's current front desk, not the new agent.</div>` : "";
+
+  document.getElementById("content").innerHTML = `
+    <h2>Speed</h2>
+    <div class="grid">
+      ${tile("Enquiries handled", nf.format(T), "Every call or message recorded, whatever the outcome.", `Nikhil's baseline: about 200 a month`)}
+      ${tile("Average time to first response", R ? dur(s.avg_response_seconds) : null, "How long a caller waits before anyone answers. Faster answers win projects.", `Goal: under 5 minutes, day or night`)}
+      ${tile("Answered within 5 minutes", pct(s.within_5_min, R), `${s.within_5_min} of ${R} enquiries with a recorded response.`, "Nikhil's goal: 100%")}
+      ${tile("Answered within 1 hour", pct(s.within_1_hour, R), `${s.within_1_hour} of ${R}. Replies inside an hour convert about 4x better than next-day replies.`, "Baseline: about 48% got no reply within 48 hours")}
+    </div>
+
+    <h2>Outcomes</h2>
+    <div class="tile">
+      <div class="label">Where every enquiry ended up</div>
+      <div class="bar" role="img" aria-label="Outcome split">${bar}</div>
+      <table><tbody>${rows}</tbody></table>
+      <p class="why">${q} of ${T} reached a designer (Forward plus Forward with flag). Every lead is also kept in the CRM, including declines, so the rules can be audited later. Average project: 8-14 lakh.</p>
+    </div>
+
+    <h2>Designers</h2>
+    <div class="grid">
+      ${tile("Consultations booked", s.live_rows ? nf.format(s.consultations_booked) : null, "Booked inside the call. This is the step before a project.")}
+      ${tile("Notified to claimed", s.claimed ? dur(s.avg_claim_seconds) : null, "How long a lead waits before a designer says 'mine'. Starts once Telegram is live.")}
+      ${tile("Unclaimed leads", s.notified ? nf.format(s.unclaimed) : null, "Leads sent to designers that nobody has picked up. Each one is a risk of going cold.")}
+    </div>
+
+    <h2>Cost (USD, estimated)</h2>
+    <div class="grid">
+      ${tile("Total spent", usd(s.total_cost_usd), `AI classification ${usd(s.classification_cost_usd)}; voice ${usd(s.voice_cost_usd)}.`, "Voice cost starts with live calls")}
+      ${tile("Cost per enquiry", usd(perCall), "Total cost divided by all enquiries handled.")}
+      ${tile("Cost per qualified lead", usd(perQual), "Total cost divided by leads worth a designer's time. Compare with an 8-14 lakh project.")}
+    </div>`;
+  document.getElementById("foot").textContent = "Updated " + new Date(s.generated_at).toLocaleString("en-IN") + ". Prices are estimates; check the AI vendor's current rates.";
+}
+
+async function load() {
+  try {
+    const r = await fetch(SUPABASE_URL + "/rest/v1/rpc/dashboard_stats", {
+      method: "POST",
+      headers: { apikey: PUBLISHABLE_KEY, "Content-Type": "application/json" },
+      body: "{}",
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    render(await r.json());
+  } catch (e) {
+    document.getElementById("content").innerHTML = `<p class="err">Could not load the numbers (${e.message}). Try Refresh.</p>`;
+  }
+}
+document.getElementById("refresh").addEventListener("click", load);
+load();
+setInterval(load, 60000);
+</script>
+</body>
+</html>

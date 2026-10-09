@@ -37,3 +37,22 @@
 - What broke: (1) gemini-2.5-flash was closed to new accounts (404), switched to gemini-3.8-flash. (2) "As soon as possible" was read as a deadline under 6 weeks and F04 was wrongly declined. (3) "Just exploring" was read as a clear timeline (W10). (4) W05 and W02 were marked unreachable although they had content. All three were prompt bugs; fixed in `prompts/classify.md`.
 - Lesson: when a result looks wrong, read the evidence quote the model gave; it shows which instruction misled it.
 - Open for Nikhil: how the 6-week rule is counted (T15, T02), minimum office size (T18), 75% budget line (F10), and what to do with "just exploring" leads (W10).
+
+## Phase 2 (in progress, 2026-10-09)
+
+**Built**
+- Supabase project `aangan-phone-agent` (free plan, Mumbai). Tables `calls` and `cost_log`, locked by row-level security (no public reads or writes).
+- One public function, `dashboard_stats()`, returns totals only (no names, numbers or transcripts). The dashboard page can call only this.
+- `dashboard/index.html`: the dashboard. Deployed to Vercel as `aangan-dashboard` (protected by Vercel login by default).
+- `tools/seed_supabase.py`: loads the 40 classified enquiries as sample rows. Waiting for the Supabase secret key in `.env`.
+
+**Decisions**
+- Dashboard shows totals only. Per-lead audit view needs a login; planned for later.
+- `response_tracked` flag: web forms and complaints have no reply time in the data, so they are left out of speed numbers instead of counted as "unanswered".
+- Sample rows are marked `is_sample` and the dashboard says so in a banner.
+
+**What I learned**
+- Anyone with the public key can call the database address, so the only safe design is: lock tables, expose one totals function.
+- Vercel protects new sites with a login by default.
+
+**Next:** Milind adds the Supabase secret key, seed runs, dashboard is checked against the classifier output.
