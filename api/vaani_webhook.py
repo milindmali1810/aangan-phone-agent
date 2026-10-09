@@ -29,7 +29,7 @@ class handler(BaseHTTPRequestHandler):
         if pipeline.token_ok(token):  # with the secret: which settings does this server see? (yes/no only, never values)
             from aangan import env
             names = ["GEMINI_API_KEY", "SUPABASE_URL", "SUPABASE_SECRET_KEY", "WEBHOOK_SECRET", "TELEGRAM_BOT_TOKEN",
-                     "TELEGRAM_CHAT_ID", "TELEGRAM_WEBHOOK_SECRET", "CRON_SECRET", "HUBSPOT_TOKEN"]
+                     "TELEGRAM_CHAT_ID", "TELEGRAM_WEBHOOK_SECRET", "CRON_SECRET", "HUBSPOT_TOKEN", "CAL_API_KEY", "BOOKING_SECRET"]
             body["settings_seen"] = {n: bool(env.get(n)) for n in names}
         self._reply(200, body)
 
