@@ -10,7 +10,7 @@ import hmac
 from datetime import datetime, timedelta, timezone
 
 from . import config as C
-from . import db, env
+from . import db, env, telegram
 from .classifier import classify_text
 
 IST = timezone(timedelta(hours=5, minutes=30))
@@ -148,8 +148,13 @@ def _process_call(e):
          "tokens_in": r["tokens_in"], "tokens_out": r["tokens_out"], "model": r["model"]},
     ])
 
-    # --- later phases plug in here, using `saved` and `r["handoff_note"]` ---
-    # Phase 3: send the contact (and a deal for FORWARD / FORWARD_WITH_FLAG) to HubSpot
-    # Phase 4: send FORWARD / FORWARD_WITH_FLAG leads to Telegram with a Claim button
-
-    return {"call_id": call_id, "outcome": r["outcome"], "row_id": saved["id"], "seconds": row["call_seconds"], "start": source}
+    out = {"call_id": call_id, "outcome": r["outcome"], "row_id": saved["id"], "seconds": row["call_seconds"], "start": source}
+    # Telegram: a failure here must never lose the call, which is already saved
+    if telegram.enabled():
+        try:
+            out["telegram_message"] = telegram.send_lead(saved, row, r)
+        except Exception as ex:
+            out["telegram_error"] = str(ex)[:200]
+            print("telegram error:", repr(ex)[:300])
+    # --- Phase 3 plugs in here: send the contact (and a deal for FORWARD / FORWARD_WITH_FLAG) to HubSpot ---
+    return out
