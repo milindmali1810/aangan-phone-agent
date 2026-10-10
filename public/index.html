@@ -646,7 +646,7 @@ const RES = { pass: ["good", "Pass"], fail: ["bad", "Fail"], unclear: ["warn", "
 const safeUrl = (u) => /^https:\/\//i.test(u || "") ? u : "";
 
 function drawTab() {
-  const c = curCall; if (!c || !c.transcript && curTab !== "sum" && !c.handoff_note && c.reason === undefined) return;
+  const c = curCall; if (!c || !("handoff_note" in c)) return;  // the list row has no transcript or note: wait for the full call
   const B = $("dBody");
   if (curTab === "sum") {
     const rec = safeUrl(c.recording_url);
@@ -661,13 +661,17 @@ function drawTab() {
   } else if (curTab === "tr") {
     const tr = c.transcript || "";
     if (!tr) { B.innerHTML = '<div class="card"><span class="dash">No transcript for this row.</span></div>'; return; }
-    const lines = tr.split(/\n+/).filter(Boolean); let html = "", any = false;
-    for (const ln of lines) {
-      const m = ln.match(/^\s*(AGENT|USER|CALLER|ASSISTANT)\s*:\s*(.*)$/i);
-      if (m) { any = true; const agent = /^(AGENT|ASSISTANT)$/i.test(m[1]); html += `<div class="b ${agent ? "agent" : "user"}"><small>${agent ? "Agent" : "Caller"}</small>${esc(m[2])}</div>`; }
-      else html += `<div class="b agent" style="max-width:100%">${esc(ln)}</div>`;
+    const turns = [];  // live lines look like "[20:31:01] AGENT: text"; same speaker in a row is joined
+    for (const ln of String(tr).split(/\r?\n/).filter((l) => l.trim())) {
+      const m = ln.match(/^\s*(?:\[([^\]]*)\]\s*)?(AGENT|USER|CALLER|ASSISTANT)\s*:\s*(.*)$/i);
+      if (m) {
+        const agent = /^(AGENT|ASSISTANT)$/i.test(m[2]), last = turns[turns.length - 1];
+        if (last && last.agent === agent) last.text += " " + m[3]; else turns.push({ agent, time: m[1] || "", text: m[3] });
+      } else turns.push({ agent: null, text: ln });
     }
-    B.innerHTML = `<div class="bub">${html}</div>` + (any ? "" : "");
+    B.innerHTML = `<div class="bub">` + turns.map((t) => t.agent === null
+      ? `<div class="b agent" style="max-width:100%">${esc(t.text)}</div>`
+      : `<div class="b ${t.agent ? "agent" : "user"}"><small>${t.agent ? "Agent" : "Caller"}${t.time ? " · " + esc(t.time) : ""}</small>${esc(t.text)}</div>`).join("") + `</div>`;
   } else if (curTab === "ev") {
     const cr = c.criteria ? Object.entries(c.criteria) : [];
     B.innerHTML = cr.length ? `<div class="crit">` + cr.map(([k, v]) => { const r = RES[v.result] || ["neutral", v.result]; return `<div class="crit-i ${esc(v.result)}"><header><span>${esc(k.replace(/_/g, " "))}</span>${chip(r[0], esc(r[1]))}</header>${v.evidence ? `<blockquote>${esc(v.evidence)}</blockquote>` : '<div class="dash" style="margin-top:4px">No evidence recorded.</div>'}</div>`; }).join("") + `</div>` : '<div class="card"><span class="dash">No criteria for this row.</span></div>';
